@@ -1,15 +1,14 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 to Step 6 (Zero-egress trap, Ingestion/setup, Briefing view, Gap Strip minimap, Context lineage drawer, Accessibility pass).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 (Steps 1 to 7: Zero-egress trap, Ingestion/setup, Briefing view, Gap Strip minimap, Context lineage drawer, Accessibility pass, Polish & documentation).
 - **What works**:
-  - Skip link to `#main-content`, semantic HTML5 landmarks (`header`, `main`, `aside`), single page `h1`.
-  - Accessible visible 2px outline focus rings (`:focus-visible`), min 44px touch targets on buttons and pins.
-  - `prefers-reduced-motion` fully respected in CSS transitions and JS scrolling.
-  - WCAG AA/AAA verified contrast ratios across all semantic badges and button gradients.
-  - `npm run build`, `npm run smoke`, and `npm test` all passing.
+  - Full end-to-end executive UI with zero-egress badge, dropzone, staged progress, Gap Strip density minimap, briefing cards, and verbatim context drawer.
+  - Page title, custom warm-orange SVG favicon, meta description, and comprehensive documentation in README.md.
+  - Strict CSP `connect-src 'none'` headers in vercel.json.
+  - `npm run build`, `npm run smoke`, and `npm test` all passing cleanly.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 7 — Polish (metadata, SVG favicon, comprehensive README, Gen AI disclosure).
+- **Next step**: CHECKPOINT verification, deployment, and live status reporting.
 
 ---
 
@@ -133,6 +132,12 @@
   - Text `#18181b` (zinc-900) on `#ffffff` (card bg): **17.21 : 1** (WCAG AAA)
   - Text `#18181b` (zinc-900) on `#fafafa` (page bg): **16.36 : 1** (WCAG AAA)
   - Text `#71717a` (zinc-500) on `#ffffff` (card bg): **4.63 : 1** (WCAG AA)
+- **Issues Resolved**: None.
+
+### Step 18: Polish & Documentation (Chunk 2 Step 7) [2026-10-09T14:44:00+05:30]
+- **Prompt/Instruction Summary**: Page title, custom brand SVG favicon, meta description, comprehensive README with sections (what it is, local-first explanation, how to export from WhatsApp for Android/iPhone, run locally, deploy, architecture in text, and Gen AI disclosure: "Engine 1 uses no generative AI").
+- **Files Modified**: `index.html`, `public/favicon.svg`, `README.md`, `prompt.md`.
+- **Key Decisions**: Replaced default Vite purple favicon with branded warm-orange gradient SVG lightning bolt on dark backdrop, meeting brand aesthetic. Structured README covering full architecture, testing, zero-egress posture, and offline capability.
 - **Issues Resolved**: None.
 
 ---
