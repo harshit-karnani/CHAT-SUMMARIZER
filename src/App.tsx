@@ -8,6 +8,7 @@ import { Dropzone } from './ui/Dropzone';
 import { SetupCard } from './ui/SetupCard';
 import { StagedProgress, type PipelineStage } from './ui/StagedProgress';
 import { EmptyState } from './ui/EmptyState';
+import { BriefingView } from './ui/BriefingView';
 import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
@@ -141,31 +142,64 @@ export default function App() {
         <StagedProgress currentStage={stage} />
 
         {/* 4. Briefing Output or Empty State (when generated) */}
-        {chat && !isConfiguring && stage === 'done' && (
+        {chat && !isConfiguring && stage === 'done' && briefing && (
           <>
-            {briefing && briefing.items.length === 0 ? (
+            {briefing.items.length === 0 ? (
               <EmptyState onAdjustTime={() => setIsConfiguring(true)} />
             ) : (
-              <div className="w-full card p-6 bg-white shadow-xs">
-                <div className="flex items-center justify-between pb-3 border-b border-zinc-100 mb-4">
+              <div className="w-full flex flex-col lg:flex-row gap-6 items-start">
+                {/* Desktop Left Rail: Quick setup & stats summary */}
+                <aside className="w-full lg:w-72 shrink-0 card p-4 sm:p-5 bg-white border border-zinc-200 shadow-xs space-y-4">
                   <div>
-                    <h2 className="text-base font-bold text-zinc-900">
-                      Briefing Generated
-                    </h2>
-                    <p className="text-xs text-zinc-500">
-                      {briefing?.items.length} items found across {briefing?.missedCount} unread messages
-                    </p>
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+                      User Context
+                    </span>
+                    <div className="text-sm font-bold text-zinc-900 mt-0.5">
+                      @{userContext.me}
+                    </div>
+                    <div className="text-xs text-zinc-500 truncate mt-0.5">
+                      Aliases: {userContext.aliases.join(', ')}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsConfiguring(true)}
-                    className="text-xs text-zinc-600 hover:text-zinc-900 font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 cursor-pointer"
-                  >
-                    Adjust parameters
-                  </button>
-                </div>
-                <div className="text-xs text-zinc-600">
-                  Ready for full briefing view.
+
+                  <div className="pt-3 border-t border-zinc-100">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
+                      Chat Window
+                    </span>
+                    <div className="text-xs text-zinc-700 mt-1">
+                      {chat.messages.length} messages total
+                    </div>
+                    <div className="text-xs text-orange-700 font-semibold mt-0.5">
+                      {briefing.missedCount} unread missed
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-zinc-100 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsConfiguring(true)}
+                      className="w-full py-2 px-3 text-xs font-semibold rounded-xl bg-zinc-100 hover:bg-zinc-200/80 text-zinc-800 transition-colors cursor-pointer"
+                    >
+                      Reconfigure parameters
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetChat}
+                      className="w-full py-2 px-3 text-xs font-semibold rounded-xl text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 transition-colors cursor-pointer"
+                    >
+                      Upload different chat
+                    </button>
+                  </div>
+                </aside>
+
+                {/* Right Column: Briefing View */}
+                <div className="flex-1 w-full min-w-0">
+                  <BriefingView
+                    briefing={briefing}
+                    allMessages={chat.messages}
+                    onOpenContext={(msgId) => console.log('Open context for message:', msgId)}
+                    onAdjustParameters={() => setIsConfiguring(true)}
+                  />
                 </div>
               </div>
             )}

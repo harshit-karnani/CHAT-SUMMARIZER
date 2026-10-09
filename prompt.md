@@ -1,15 +1,14 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap & network badge) + Chunk 2 Step 2 (Ingestion and setup view: drag & drop dropzone, demo loader button with offline bundled import, collapsible WhatsApp export instructions, sender radio group, chip-based alias manager, dual synchronized time controls with presets, staged progress pipeline indicator, and zero-result empty state).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view: executive header card with reading-time speedup stats, 4 scannable sections for Needs you / Deadlines / Decisions / FYI, collapsible Noise drawer with message inspections, monospace #msg-{id} citations, sender initials, and inline Add to Calendar RFC 5545 ICS download buttons).
 - **What works**:
-  - Drag and drop .txt/.zip extraction and instant demo loading.
-  - Interactive participant selection and chip-based alias management.
-  - Live "You missed {N} messages" human readout updating on time changes.
-  - Real staged progress pipeline (< 600ms total visible transition).
+  - Full executive briefing rendering with 4-tier categorization and scannable visual hierarchy.
+  - Word count reading time estimate ("{N} messages, about {M} min to read, here is the 40-second version").
+  - RFC 5545 .ics downloads on deadline cards.
   - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 3 — Briefing view (executive header card, categorized sections for Needs you / Deadlines / Decisions / FYI, collapsible Noise section, monospace #msg tags, and inline Add to Calendar ICS buttons).
+- **Next step**: Chunk 2 Step 4 — Gap Strip density minimap (`src/ui/GapStrip.tsx`).
 
 ---
 
@@ -99,6 +98,12 @@
 - **Prompt/Instruction Summary**: Build landing card with drag-and-drop dropzone supporting .txt/.zip exports, offline bundled demo loader button with Zap icon, collapsible WhatsApp export guide for Android and iOS, setup card with accessible sender radio group, alias chip manager, time range slider synchronized with datetime input and 3 presets, live missed messages readout, and staged pipeline progress (< 600ms).
 - **Files Modified**: `src/ui/Dropzone.tsx`, `src/ui/ExportInstructions.tsx`, `src/ui/SetupCard.tsx`, `src/ui/StagedProgress.tsx`, `src/ui/EmptyState.tsx`, `src/App.tsx`, `prompt.md`.
 - **Key Decisions**: Integrated staged animation loop reflecting pipeline stages (reading -> mentions -> dates -> building). Handled verbatimModuleSyntax type imports for event listeners.
+- **Issues Resolved**: None.
+
+### Step 14: Briefing View & Item Cards (Chunk 2 Step 3) [2026-10-09T14:35:00+05:30]
+- **Prompt/Instruction Summary**: Build BriefingView and BriefingItemCard components. Executive summary card with word-count reading-time formula, sections for Needs you, Deadlines, Decisions, and FYI. Collapsible Noise section. Each card includes kind badge, title, summary, reasons, monospace #msg tag, sender initials, time, and "+ Add to Calendar" RFC 5545 button.
+- **Files Modified**: `src/ui/BriefingItemCard.tsx`, `src/ui/BriefingView.tsx`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Scannable, flat card hierarchy with explicit visual markers and semantic badges. Integrated calendar downloads cleanly per item without external packages.
 - **Issues Resolved**: None.
 
 ---
