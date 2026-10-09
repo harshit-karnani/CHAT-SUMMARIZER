@@ -22,7 +22,7 @@ interface HeaderMatch {
 }
 
 function matchHeader(line: string): HeaderMatch | null {
-  const cleanLine = line.replace(/[\u200e\u200f]/g, '').trim();
+  const cleanLine = line.replace(/^\uFEFF/, '').replace(/[\u200e\u200f\u202f]/g, '').trim();
   const iosMatch = cleanLine.match(IOS_REGEX);
   if (iosMatch) {
     return {
@@ -164,6 +164,10 @@ export function parseChat(rawText: string): ParsedChat {
     senders: Array.from(sendersSet),
     dateOrder,
     format,
+    warning:
+      messages.length > 20000
+        ? 'Over 20,000 messages detected. All messages are preserved and processed locally.'
+        : undefined,
   };
 }
 
@@ -172,11 +176,28 @@ export async function readUploadedFile(file: File): Promise<string> {
   if (isZip) {
     const buffer = await file.arrayBuffer();
     const unzipped = unzipSync(new Uint8Array(buffer));
-    const txtFilename = Object.keys(unzipped).find((k) => k.toLowerCase().endsWith('.txt'));
+    const candidateFiles = Object.keys(unzipped).filter(
+      (k) =>
+        k.toLowerCase().endsWith('.txt') &&
+        !k.includes('__MACOSX') &&
+        !k.toLowerCase().includes('media')
+    );
+    const txtFilename =
+      candidateFiles.find((k) => k.toLowerCase().endsWith('_chat.txt') || k.toLowerCase() === '_chat.txt') ||
+      candidateFiles[0];
+
     if (!txtFilename) {
       throw new ParseError('No .txt chat export found inside the zip archive.');
     }
-    return strFromU8(unzipped[txtFilename]);
+    let content = strFromU8(unzipped[txtFilename]);
+    if (content.charCodeAt(0) === 0xfeff) {
+      content = content.slice(1);
+    }
+    return content;
   }
-  return await file.text();
+  let text = await file.text();
+  if (text.charCodeAt(0) === 0xfeff) {
+    text = text.slice(1);
+  }
+  return text;
 }

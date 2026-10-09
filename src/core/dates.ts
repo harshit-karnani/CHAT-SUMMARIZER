@@ -5,8 +5,10 @@ export interface DeadlineMatch {
   matchedText: string;
 }
 
+const DATE_HINT_REGEX = /\b(today|tomorrow|tonight|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun|eod|morning|evening|afternoon|night|\d{1,2}(?::\d{2})?\s*(?:am|pm)|\d{1,2}(?:st|nd|rd|th)|next\s+\w+|in\s+\d+\s*(?:h|hr|hour|d|day|m|min)|by\s+[a-z0-9]+|before|until|deadline|due|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/i;
+
 export function extractDeadlines(text: string, refTs: number): DeadlineMatch[] {
-  if (!text || !text.trim()) return [];
+  if (!text || !text.trim() || !DATE_HINT_REGEX.test(text)) return [];
 
   const refDate = new Date(refTs);
   const results: DeadlineMatch[] = [];

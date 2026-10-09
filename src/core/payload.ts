@@ -21,7 +21,7 @@ export function buildCloudPayload(
     (m) => m.ts > user.lastReadAt && !m.isSystem && !isMediaText(m.text)
   );
 
-  const triageResults = triage(allMessages, user);
+  const triageResults = triage(slice, user);
   const triageMap = new Map<number, number>();
   for (const tr of triageResults) {
     let s = tr.score;

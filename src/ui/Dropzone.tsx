@@ -1,7 +1,7 @@
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
-import { UploadCloud, Zap, FileText, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { UploadCloud, Zap, AlertCircle, HelpCircle } from 'lucide-react';
 import { readUploadedFile } from '../core/parser';
-import { ExportInstructions } from './ExportInstructions';
 
 interface DropzoneProps {
   onLoadChat: (rawText: string, isDemo?: boolean) => void;
@@ -19,7 +19,7 @@ export function Dropzone({ onLoadChat, onLoadDemo, errorMessage }: DropzoneProps
     setFileError(null);
     const validExt = file.name.endsWith('.txt') || file.name.endsWith('.zip');
     if (!validExt) {
-      setFileError('Please upload a .txt WhatsApp chat export or .zip archive.');
+      setFileError('Unrecognized file format. CatchUp Zero supports .txt exports and .zip archives.');
       return;
     }
 
@@ -28,7 +28,7 @@ export function Dropzone({ onLoadChat, onLoadDemo, errorMessage }: DropzoneProps
       const text = await readUploadedFile(file);
       onLoadChat(text, false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to read chat file.';
+      const msg = err instanceof Error ? err.message : 'Failed to read chat export.';
       setFileError(msg);
     } finally {
       setIsLoadingFile(false);
@@ -60,17 +60,8 @@ export function Dropzone({ onLoadChat, onLoadDemo, errorMessage }: DropzoneProps
   };
 
   return (
-    <div className="card p-6 bg-white shadow-xs w-full max-w-xl mx-auto">
-      <div className="text-center mb-5">
-        <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">
-          Drop your WhatsApp export
-        </h2>
-        <p className="text-xs text-zinc-500 mt-1">
-          Zero-egress analysis. 100% processed in your browser memory.
-        </p>
-      </div>
-
-      {/* Drag & Drop Zone */}
+    <div className="card p-5 sm:p-6 bg-white shadow-2xs w-full max-w-xl mx-auto space-y-4">
+      {/* Purposeful Interactive Drop Area */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -84,14 +75,16 @@ export function Dropzone({ onLoadChat, onLoadDemo, errorMessage }: DropzoneProps
             fileInputRef.current?.click();
           }
         }}
-        aria-label="Upload WhatsApp chat export file (.txt or .zip)"
-        className={`relative border-2 border-dashed rounded-2xl p-7 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2.5 ${
-          isDragging
-            ? 'border-orange-500 bg-orange-50/40'
-            : 'border-zinc-200 hover:border-zinc-300 bg-zinc-50/50 hover:bg-zinc-50'
+        aria-label="Drop your WhatsApp export here, or browse"
+        className={`border border-dashed border-zinc-300 bg-zinc-100/50 hover:bg-white hover:border-orange-500 rounded-xl p-5 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+          isDragging ? 'border-orange-500 bg-orange-50/60' : ''
         }`}
       >
+        <label htmlFor="chat-export-input" className="sr-only">
+          Upload WhatsApp chat export file (.txt or .zip)
+        </label>
         <input
+          id="chat-export-input"
           ref={fileInputRef}
           type="file"
           accept=".txt,.zip"
@@ -100,49 +93,63 @@ export function Dropzone({ onLoadChat, onLoadDemo, errorMessage }: DropzoneProps
           aria-hidden="true"
         />
 
-        <div className="w-11 h-11 rounded-2xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 shadow-xs">
-          <UploadCloud className="w-5 h-5 text-zinc-600" />
+        <div className="w-10 h-10 rounded-xl bg-white border border-zinc-200 flex items-center justify-center text-zinc-600 shadow-2xs">
+          <UploadCloud className="w-5 h-5 text-orange-600" />
         </div>
 
         <div>
-          <span className="text-xs font-semibold text-zinc-800">
-            {isLoadingFile ? 'Extracting & parsing file...' : 'Click to select or drag and drop'}
+          <span className="text-xs font-semibold text-zinc-900 font-sans">
+            {isLoadingFile ? 'Unpacking & reading transcript...' : 'Drop your WhatsApp export here, or browse'}
           </span>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            Supports WhatsApp <span className="font-mono text-zinc-600">.txt</span> and <span className="font-mono text-zinc-600">.zip</span> exports
+          <p className="text-[11px] text-zinc-500 mt-0.5 font-sans">
+            Supports Android <span className="font-mono text-zinc-700">.txt</span> and iOS <span className="font-mono text-zinc-700">.zip</span> (unpacked locally)
           </p>
         </div>
       </div>
 
-      {/* Error Message */}
+      {/* Error Message with Help Link */}
       {(fileError || errorMessage) && (
-        <div className="mt-3.5 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            <span className="font-semibold">Unable to parse export:</span>{' '}
-            {fileError || errorMessage}
+        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 flex items-start justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold">Unable to process export:</span>{' '}
+              {fileError || errorMessage}
+            </div>
           </div>
+          <Link
+            to="/help"
+            className="text-orange-700 font-semibold underline shrink-0 flex items-center gap-1 hover:text-orange-800"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>Export help</span>
+          </Link>
         </div>
       )}
 
-      {/* Demo Load Action */}
-      <div className="mt-5 pt-4 border-t border-zinc-100 flex flex-col items-center">
+      {/* Integrated Load Demo Chat Action */}
+      <div className="pt-3 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+        <div className="text-[11px] text-zinc-400 font-sans text-center sm:text-left">
+          No export file ready? Test the full pipeline instantly.
+        </div>
         <button
           type="button"
           onClick={onLoadDemo}
-          className="btn-primary w-full sm:w-auto px-6 py-2.5 cursor-pointer shadow-md"
+          title="sample chat, not real data"
+          className="btn-primary py-2 px-3.5 text-xs font-semibold cursor-pointer shrink-0 flex items-center gap-1.5"
         >
-          <Zap className="w-4 h-4 text-zinc-950" />
+          <Zap className="w-3.5 h-3.5" />
           <span>Load Demo Chat</span>
+          <span className="text-[10px] text-zinc-900/70 font-normal hidden sm:inline">
+            (sample chat, not real data)
+          </span>
         </button>
-        <span className="text-[11px] text-zinc-400 mt-1.5 flex items-center gap-1">
-          <FileText className="w-3 h-3 text-zinc-400" />
-          sample chat, not real data (runs offline)
+      </div>
+      <div className="text-center">
+        <span className="text-[10px] text-zinc-400 font-mono">
+          sample chat, not real data (runs offline, 0 network calls)
         </span>
       </div>
-
-      {/* WhatsApp export instructions toggle */}
-      <ExportInstructions />
     </div>
   );
 }

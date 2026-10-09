@@ -12,6 +12,7 @@ export interface ParsedChat {
   senders: string[];
   dateOrder: 'dmy' | 'mdy';
   format: 'android' | 'ios';
+  warning?: string;
 }
 
 export type Signal =

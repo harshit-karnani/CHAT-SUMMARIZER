@@ -23,7 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-# Chat export uploads
+# Chat export uploads and testing files
 *.zip
 *.txt
 !src/data/demo_chat.txt
+!tests/fixtures/*
+/private/
+/real-chats/
+_chat.txt
+WhatsApp Chat*

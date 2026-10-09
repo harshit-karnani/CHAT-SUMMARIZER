@@ -1,5 +1,5 @@
 import { useState, useId, type KeyboardEvent } from 'react';
-import { User, Tag, Clock, Sparkles, X, RotateCcw } from 'lucide-react';
+import { User, Tag, Clock, Sparkles, X, RotateCcw, Search } from 'lucide-react';
 import type { ParsedChat, UserContext } from '../types';
 
 interface SetupCardProps {
@@ -17,6 +17,15 @@ function toDatetimeLocal(ts: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function formatReadoutDate(ts: number): string {
+  const d = new Date(ts);
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const day = d.getDate();
+  const month = d.toLocaleDateString('en-US', { month: 'short' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${weekday} ${day} ${month}, ${time}`;
+}
+
 export function SetupCard({
   chat,
   userContext,
@@ -29,12 +38,11 @@ export function SetupCard({
   const maxTs = chat.messages[chat.messages.length - 1]?.ts ?? Date.now();
 
   const [aliasInput, setAliasInput] = useState('');
+  const [senderFilter, setSenderFilter] = useState('');
   const senderGroupId = useId();
 
   // Compute live missed messages count
-  const missedCount = chat.messages.filter(
-    (m) => m.ts > userContext.lastReadAt
-  ).length;
+  const missedCount = chat.messages.filter((m) => m.ts > userContext.lastReadAt).length;
 
   const handleSelectSender = (sender: string) => {
     const firstName = sender.split(' ')[0].trim();
@@ -50,14 +58,23 @@ export function SetupCard({
   };
 
   const handleAddAlias = () => {
-    const trimmed = aliasInput.trim().replace(/^@/, '');
-    if (!trimmed) return;
-    if (!userContext.aliases.some((a) => a.toLowerCase() === trimmed.toLowerCase())) {
-      onChangeUser({
-        ...userContext,
-        aliases: [...userContext.aliases, trimmed],
-      });
+    const raw = aliasInput.replace(/^@/, '').trim();
+    if (!raw) return;
+
+    // Support comma-separated additions
+    const parts = raw.split(',').map((p) => p.trim()).filter(Boolean);
+    const updated = [...userContext.aliases];
+
+    for (const part of parts) {
+      if (!updated.some((a) => a.toLowerCase() === part.toLowerCase())) {
+        updated.push(part);
+      }
     }
+
+    onChangeUser({
+      ...userContext,
+      aliases: updated,
+    });
     setAliasInput('');
   };
 
@@ -92,12 +109,14 @@ export function SetupCard({
     }
   };
 
-  // Preset calculation relative to chat latest message
-  const applyPreset = (preset: 'last_night' | 'this_morning' | 'two_days_ago') => {
+  // Presets: 2 hours ago, Last night 10 PM, This morning 9 AM, 2 days ago
+  const applyPreset = (preset: 'two_hours_ago' | 'this_morning' | 'last_night' | 'two_days_ago') => {
     const maxDate = new Date(maxTs);
     let targetTs = maxTs;
 
-    if (preset === 'this_morning') {
+    if (preset === 'two_hours_ago') {
+      targetTs = maxTs - 2 * 3600 * 1000;
+    } else if (preset === 'this_morning') {
       const d = new Date(maxDate);
       d.setHours(9, 0, 0, 0);
       if (d.getTime() >= maxTs) {
@@ -116,13 +135,17 @@ export function SetupCard({
     handleSliderChange(targetTs);
   };
 
+  const visibleSenders = senderFilter
+    ? chat.senders.filter((s) => s.toLowerCase().includes(senderFilter.toLowerCase()))
+    : chat.senders;
+
   return (
     <div className="card p-5 sm:p-6 bg-white shadow-xs w-full max-w-xl mx-auto space-y-5 text-zinc-900">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-zinc-100">
         <div>
-          <h2 className="text-lg font-bold text-zinc-900">Configure Briefing</h2>
-          <p className="text-xs text-zinc-500">
+          <h2 className="text-base sm:text-lg font-display font-bold text-zinc-900">Configure Briefing</h2>
+          <p className="text-xs text-zinc-500 font-sans">
             {chat.messages.length} messages loaded ({chat.senders.length} participants)
           </p>
         </div>
@@ -141,16 +164,35 @@ export function SetupCard({
 
       {/* 1. Which one are you? */}
       <div>
-        <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-800 mb-2">
-          <User className="w-3.5 h-3.5 text-zinc-500" />
-          Which one are you?
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
+            <User className="w-3.5 h-3.5 text-zinc-500" />
+            Which one are you?
+          </label>
+          <span className="text-[11px] font-mono text-zinc-400">
+            Current: @{userContext.me}
+          </span>
+        </div>
+
+        {chat.senders.length > 8 && (
+          <div className="relative mb-2">
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5" />
+            <input
+              type="text"
+              value={senderFilter}
+              onChange={(e) => setSenderFilter(e.target.value)}
+              placeholder="Search sender..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 focus:bg-white focus:border-orange-500 outline-none"
+            />
+          </div>
+        )}
+
         <div
           role="radiogroup"
           aria-label="Select your participant identity"
-          className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-0.5"
         >
-          {chat.senders.map((sender) => {
+          {visibleSenders.map((sender) => {
             const isSelected = userContext.me.toLowerCase() === sender.toLowerCase();
             const id = `${senderGroupId}-${sender}`;
             return (
@@ -159,7 +201,7 @@ export function SetupCard({
                 htmlFor={id}
                 className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
                   isSelected
-                    ? 'border-orange-500 bg-orange-50/60 text-orange-950 font-semibold shadow-xs'
+                    ? 'border-orange-500 bg-orange-50/70 text-orange-950 font-semibold shadow-2xs'
                     : 'border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700'
                 }`}
               >
@@ -209,12 +251,12 @@ export function SetupCard({
             onChange={(e) => setAliasInput(e.target.value)}
             onKeyDown={handleKeyDownAlias}
             onBlur={handleAddAlias}
-            placeholder={userContext.aliases.length === 0 ? "Harshit, bro, H" : "+ add alias"}
-            className="flex-1 min-w-[100px] text-xs bg-transparent border-none outline-none text-zinc-800 placeholder-zinc-400 px-1 py-0.5"
+            placeholder="Harshit, bro, H"
+            className="flex-1 min-w-[120px] text-xs bg-transparent border-none outline-none text-zinc-800 placeholder-zinc-400 px-1 py-0.5"
           />
         </div>
-        <p className="text-[11px] text-zinc-400 mt-1">
-          Press Enter to add. Whole word matches will score mentions.
+        <p className="text-[11px] text-zinc-500 mt-1.5 font-sans leading-normal">
+          Short or common words like 'bro' or 'H' count as weak matches. Press Enter or comma to add.
         </p>
       </div>
 
@@ -229,6 +271,11 @@ export function SetupCard({
             You missed {missedCount} message{missedCount === 1 ? '' : 's'}
           </span>
         </div>
+
+        {/* Readout anchored message date */}
+        <p className="text-[11px] text-zinc-500 font-mono mb-2">
+          Counting back from the last message, {formatReadoutDate(userContext.lastReadAt)}
+        </p>
 
         {/* Range slider */}
         <div className="space-y-2 py-1">
@@ -253,7 +300,14 @@ export function SetupCard({
             />
 
             {/* Presets */}
-            <div className="flex items-center gap-1.5 text-[11px]">
+            <div className="flex items-center gap-1.5 text-[11px] flex-wrap">
+              <button
+                type="button"
+                onClick={() => applyPreset('two_hours_ago')}
+                className="px-2 py-1 rounded-md bg-zinc-100 hover:bg-zinc-200/70 text-zinc-700 font-medium transition-colors cursor-pointer"
+              >
+                2 hours ago
+              </button>
               <button
                 type="button"
                 onClick={() => applyPreset('this_morning')}
@@ -286,7 +340,7 @@ export function SetupCard({
           type="button"
           onClick={onGenerate}
           disabled={isProcessing}
-          className="btn-primary w-full py-3 text-sm cursor-pointer shadow-md disabled:opacity-60"
+          className="btn-primary w-full py-3 text-xs font-semibold cursor-pointer shadow-md disabled:opacity-60"
         >
           <Sparkles className="w-4 h-4 text-zinc-950" />
           <span>{isProcessing ? 'Analyzing chat...' : 'Show what I missed'}</span>

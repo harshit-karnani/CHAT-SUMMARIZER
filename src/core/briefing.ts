@@ -51,7 +51,8 @@ export function buildBriefing(chat: ParsedChat, user: UserContext): Briefing {
   const allMessages = chat.messages;
   const slice = allMessages.filter((m) => m.ts > user.lastReadAt);
 
-  const triageResults = triage(allMessages, user);
+  // Triage only the unread slice for maximum performance
+  const triageResults = triage(slice, user);
   const triageMap = new Map<number, TriageResult>();
   for (const tr of triageResults) {
     triageMap.set(tr.messageId, tr);
