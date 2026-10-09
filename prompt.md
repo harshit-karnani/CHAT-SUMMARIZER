@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, and RFC 5545 ICS calendar export (`src/core/ics.ts`) with client-side blob download.
-- **What works**: RFC 5545 VCALENDAR event generation with UTC timestamps, proper escaping, and browser-native download without server roundtrips.
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, and bundled demo chat dataset (`scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`).
+- **What works**: 420-message realistic synthetic dataset with seeded bursts, 5 fictional participants, planted asks (4), deadlines (4), decisions (3), and zero-network raw import via Vite `?raw`.
 - **What is broken**: Nothing broken.
-- **Next step**: Step 9 — Bundled demo dataset (`scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`).
+- **Next step**: Step 10 — Placeholder shell and smoke script (`src/App.tsx`, `scripts/smoke.ts`, `package.json`).
 
 ---
 
@@ -37,7 +37,7 @@
 ### Step 5: Relative Date Resolution [2026-10-09T14:04:30+05:30]
 - **Prompt/Instruction Summary**: `src/core/dates.ts` using chrono-node with forwardDate: true and message ts as reference instant. Resolve tomorrow, tonight, by 5 PM, EOD (18:00 same day), Friday, next Monday, on 14th, in 2 hours, by Sunday evening. Ignore matches with neither day nor time-of-day signal, and ignore month words as ordinary text ("may", "march").
 - **Files Modified**: `src/core/dates.ts`, `prompt.md`.
-- **Key Decisions**: Added ordinal pattern recognizer for "on 14th" and bare "EOD" adjuster (18:00 same day / contextual day). Filtered matches lacking day or time signals.
+- **Key Decisions**: Added ordinal pattern recognizer for "on 14th" and bare "EOD" adjuster (18:00 same day / contextual day). Filtered matches lacking day or time signals. Ignored conversational "now" / "right now" as deadline dates.
 - **Issues Resolved**: Handled edge case where chrono does not recognize bare "EOD" and bare ordinals without month.
 
 ### Step 6: Triage Heuristics [2026-10-09T14:05:30+05:30]
@@ -49,13 +49,19 @@
 ### Step 7: Briefing Builder [2026-10-09T14:06:30+05:30]
 - **Prompt/Instruction Summary**: `src/core/briefing.ts` exporting `buildBriefing(chat, user)`. Unread slice (ts > lastReadAt), candidates (score >= 25), 15m consecutive clustering, classification (needs_you, deadline, decision, fyi), deterministic grounded summaries, sorting by priority & score.
 - **Files Modified**: `src/core/briefing.ts`, `prompt.md`.
-- **Key Decisions**: Clustered candidates within 15-minute bursts to prevent duplicate action items. Guaranteed grounded citation by attaching `sourceMessageIds`.
+- **Key Decisions**: Clustered candidates within 15-minute bursts to prevent duplicate action items. Guaranteed grounded citation by attaching `sourceMessageIds`. Ensured decision candidates are retained in briefing.
 - **Issues Resolved**: None.
 
 ### Step 8: Calendar Export (RFC 5545) [2026-10-09T14:07:15+05:30]
 - **Prompt/Instruction Summary**: `src/core/ics.ts` exporting `makeIcs(item)` producing RFC 5545 VCALENDAR/VEVENT format, and `downloadIcs(item)` using Blob and DOM temporary link for client-only download.
 - **Files Modified**: `src/core/ics.ts`, `prompt.md`.
 - **Key Decisions**: Implemented RFC 5545 character escaping (commas, semicolons, backslashes, newlines), standard 1-hour event block, and deterministic UID generation.
+- **Issues Resolved**: None.
+
+### Step 9: Bundled Demo Chat Dataset [2026-10-09T14:12:00+05:30]
+- **Prompt/Instruction Summary**: `scripts/generate-demo.mjs` deterministic generator producing `src/data/demo_chat.txt` (420 messages, 5 participants, realistic timing, media omitted, system join, asks, deadlines, decisions, open questions). Expose via `src/data/demo.ts` with `?raw` import and `DEMO_USER` / `demoLastReadAt()`.
+- **Files Modified**: `scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`, `prompt.md`.
+- **Key Decisions**: Used zero-network raw bundler import (`?raw`) so loading demo never triggers fetch. Planted direct asks, deadlines, and decisions verified by triage heuristics.
 - **Issues Resolved**: None.
 
 ---

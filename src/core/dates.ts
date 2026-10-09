@@ -55,7 +55,10 @@ export function extractDeadlines(text: string, refTs: number): DeadlineMatch[] {
 
     // Ignore month words used as ordinary words ("may", "march")
     const lower = p.text.trim().toLowerCase();
-    if ((lower === 'may' || lower === 'march') && !hasDay && !hasTime) {
+    if ((lower === 'may' || lower === 'march' || lower === 'now' || lower === 'right now') && !hasDay && !hasTime) {
+      continue;
+    }
+    if (lower === 'now' || lower === 'right now') {
       continue;
     }
 

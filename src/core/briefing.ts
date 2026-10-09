@@ -61,7 +61,11 @@ export function buildBriefing(chat: ParsedChat, user: UserContext): Briefing {
   const candidates: { msg: Message; triage: TriageResult }[] = [];
   for (const msg of slice) {
     const tr = triageMap.get(msg.id);
-    if (tr && tr.score >= 25) {
+    if (!tr) continue;
+    if (tr.score >= 25 || tr.signals.includes('decision')) {
+      if (tr.signals.includes('decision') && tr.score < 25) {
+        tr.score = 25;
+      }
       candidates.push({ msg, triage: tr });
     }
   }
