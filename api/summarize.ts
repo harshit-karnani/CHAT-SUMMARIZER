@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { redact } from '../src/core/redactor';
+import { redact } from '../src/core/redactor.ts';
 
 export const config = {
   maxDuration: 15,
