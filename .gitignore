@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Chat export uploads
+*.zip
+*.txt
+!src/data/demo_chat.txt
