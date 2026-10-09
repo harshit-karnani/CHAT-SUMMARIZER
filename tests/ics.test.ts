@@ -22,13 +22,13 @@ describe('RFC 5545 ICS generation', () => {
     // Assert RFC 5545 calendar envelope
     expect(ics).toContain('BEGIN:VCALENDAR');
     expect(ics).toContain('VERSION:2.0');
-    expect(ics).toContain('PRODID:-//CatchUp Zero//EN');
+    expect(ics).toContain('PRODID:-//SplitOff//EN');
     expect(ics).toContain('BEGIN:VEVENT');
     expect(ics).toContain('END:VEVENT');
     expect(ics).toContain('END:VCALENDAR');
 
     // Assert UID format
-    expect(ics).toContain(`UID:item-test-123-${fixedDueAt}@catchupzero.local`);
+    expect(ics).toContain(`UID:item-test-123-${fixedDueAt}@splitoff.local`);
 
     // Assert UTC timestamps
     expect(ics).toContain('DTSTART:20261010T150000Z');

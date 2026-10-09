@@ -1,6 +1,6 @@
 import { Calendar, UserCheck, Clock, CheckCircle2, Info, ArrowUpRight } from 'lucide-react';
 import type { BriefingItem, Message } from '../types';
-import { downloadIcs } from '../core/ics';
+import { downloadIcs, makeGoogleCalendarUrl } from '../core/ics';
 
 interface BriefingItemCardProps {
   item: BriefingItem;
@@ -36,6 +36,12 @@ export function BriefingItemCard({
   const handleCalendarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     downloadIcs(item);
+  };
+
+  const handleGoogleCalendarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = makeGoogleCalendarUrl(item);
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const getAccentBorderClass = () => {
@@ -126,15 +132,25 @@ export function BriefingItemCard({
                   {new Date(item.dueAt).getDate()}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={handleCalendarClick}
-                className="btn-secondary text-[11px] py-1 px-2.5 font-semibold"
-                title="Export event as .ics calendar file"
-              >
-                <Calendar className="w-3 h-3 text-amber-600" />
-                <span>+ Add to Calendar</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleGoogleCalendarClick}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 hover:bg-orange-100 transition-colors cursor-pointer shadow-2xs"
+                  title="Add directly to Google Calendar in 1-click"
+                >
+                  <Calendar className="w-3 h-3 text-orange-600" />
+                  <span>Google Calendar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCalendarClick}
+                  className="btn-secondary text-[11px] py-1 px-2 font-semibold"
+                  title="Export event as .ics file (Apple / Outlook)"
+                >
+                  <span>.ics</span>
+                </button>
+              </div>
             </div>
           )}
           <span className="text-[11px] text-zinc-400 font-mono">

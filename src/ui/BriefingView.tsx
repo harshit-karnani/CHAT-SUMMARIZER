@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, VolumeX, Copy, Check, Download } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, VolumeX, Copy, Check, Download, Calendar } from 'lucide-react';
 import type { Briefing, Message, ParsedChat, UserContext } from '../types';
 import { BriefingItemCard } from './BriefingItemCard';
 import { ExecutiveSummary } from './ExecutiveSummary';
 import { EmptyState } from './EmptyState';
+import { downloadAllDeadlinesIcs } from '../core/ics';
 
 interface BriefingViewProps {
   chat: ParsedChat;
@@ -242,11 +243,22 @@ export function BriefingView({
       {/* 3. Deadlines Section */}
       {deadlineItems.length > 0 && (
         <section aria-labelledby="heading-deadlines" className="space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-zinc-800">
-            <Clock className="w-4 h-4 text-amber-600" />
-            <h3 id="heading-deadlines" className="text-sm font-bold uppercase tracking-wider text-amber-800">
-              Upcoming Deadlines ({deadlineItems.length})
-            </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-800">
+              <Clock className="w-4 h-4 text-amber-600" />
+              <h3 id="heading-deadlines" className="text-sm font-bold uppercase tracking-wider text-amber-800">
+                Upcoming Deadlines ({deadlineItems.length})
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => downloadAllDeadlinesIcs(deadlineItems)}
+              className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
+              title="Add all deadlines to your calendar app (.ics)"
+            >
+              <Calendar className="w-3.5 h-3.5 text-amber-700" />
+              <span>Add All Deadlines to Calendar (.ics)</span>
+            </button>
           </div>
           <div className="space-y-3">
             {deadlineItems.map((item) => (

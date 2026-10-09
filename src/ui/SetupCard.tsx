@@ -38,6 +38,7 @@ export function SetupCard({
   const maxTs = chat.messages[chat.messages.length - 1]?.ts ?? minTs;
 
   const [aliasInput, setAliasInput] = useState('');
+  const [customIdentityInput, setCustomIdentityInput] = useState('');
   const [senderFilter, setSenderFilter] = useState('');
   const senderGroupId = useId();
 
@@ -55,6 +56,24 @@ export function SetupCard({
       me: sender,
       aliases: Array.from(existing),
     });
+  };
+
+  const handleSetCustomIdentity = (customVal?: string) => {
+    const val = (customVal ?? customIdentityInput).trim();
+    if (!val) return;
+
+    const existing = new Set(userContext.aliases);
+    existing.add(val);
+    const firstName = val.split(' ')[0].trim();
+    if (firstName && firstName.length >= 3) existing.add(firstName);
+
+    onChangeUser({
+      ...userContext,
+      me: val,
+      aliases: Array.from(existing),
+    });
+    setCustomIdentityInput('');
+    setSenderFilter('');
   };
 
   const handleAddAlias = () => {
@@ -163,61 +182,108 @@ export function SetupCard({
       </div>
 
       {/* 1. Which one are you? */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
           <label className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
             <User className="w-3.5 h-3.5 text-zinc-500" />
             Which one are you?
           </label>
-          <span className="text-[11px] font-mono text-zinc-400">
-            Current: @{userContext.me}
+          <span className="text-[11px] font-mono text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">
+            Active: <strong className="text-zinc-900">@{userContext.me}</strong>
           </span>
         </div>
 
-        {chat.senders.length > 8 && (
-          <div className="relative mb-2">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5" />
-            <input
-              type="text"
-              value={senderFilter}
-              onChange={(e) => setSenderFilter(e.target.value)}
-              placeholder="Search sender..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 focus:bg-white focus:border-orange-500 outline-none"
-            />
-          </div>
-        )}
+        {/* Custom Name / Phone Number Entry */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={customIdentityInput}
+            onChange={(e) => setCustomIdentityInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSetCustomIdentity();
+              }
+            }}
+            placeholder="Type your Name or Phone (e.g. Harshit, +91 63666 17607)..."
+            className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:border-orange-500 outline-none shadow-2xs"
+          />
+          <button
+            type="button"
+            onClick={() => handleSetCustomIdentity()}
+            disabled={!customIdentityInput.trim()}
+            className="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold cursor-pointer disabled:opacity-40 transition-colors shadow-2xs shrink-0"
+          >
+            Set as Me
+          </button>
+        </div>
 
-        <div
-          role="radiogroup"
-          aria-label="Select your participant identity"
-          className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-0.5"
-        >
-          {visibleSenders.map((sender) => {
-            const isSelected = userContext.me.toLowerCase() === sender.toLowerCase();
-            const id = `${senderGroupId}-${sender}`;
-            return (
-              <label
-                key={sender}
-                htmlFor={id}
-                className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
-                  isSelected
-                    ? 'border-orange-500 bg-orange-50/70 text-orange-950 font-semibold shadow-2xs'
-                    : 'border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700'
-                }`}
-              >
-                <input
-                  type="radio"
-                  id={id}
-                  name="participant"
-                  value={sender}
-                  checked={isSelected}
-                  onChange={() => handleSelectSender(sender)}
-                  className="accent-orange-600 w-3.5 h-3.5"
-                />
-                <span className="truncate">{sender}</span>
-              </label>
-            );
-          })}
+        {/* Participant list search & picker */}
+        <div className="pt-1">
+          <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-1.5 font-medium">
+            <span>Or select from detected participants ({chat.senders.length}):</span>
+          </div>
+
+          {chat.senders.length > 6 && (
+            <div className="relative mb-2">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                value={senderFilter}
+                onChange={(e) => setSenderFilter(e.target.value)}
+                placeholder="Filter participants or numbers..."
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-zinc-50 focus:bg-white focus:border-orange-500 outline-none"
+              />
+            </div>
+          )}
+
+          <div
+            role="radiogroup"
+            aria-label="Select your participant identity"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-0.5"
+          >
+            {visibleSenders.map((sender) => {
+              const isSelected = userContext.me.toLowerCase() === sender.toLowerCase();
+              const id = `${senderGroupId}-${sender}`;
+              return (
+                <label
+                  key={sender}
+                  htmlFor={id}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-medium cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-orange-500 bg-orange-50/70 text-orange-950 font-semibold shadow-2xs'
+                      : 'border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    id={id}
+                    name="participant"
+                    value={sender}
+                    checked={isSelected}
+                    onChange={() => handleSelectSender(sender)}
+                    className="accent-orange-600 w-3.5 h-3.5"
+                  />
+                  <span className="truncate">{sender}</span>
+                </label>
+              );
+            })}
+
+            {visibleSenders.length === 0 && senderFilter && (
+              <div className="col-span-full p-3 rounded-xl bg-amber-50 border border-amber-200 text-center space-y-1.5">
+                <p className="text-xs text-amber-900 font-medium">
+                  "{senderFilter}" was not found in chat senders.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleSetCustomIdentity(senderFilter)}
+                  className="btn-primary py-1 px-3 text-xs font-semibold cursor-pointer"
+                >
+                  Set "{senderFilter}" as my identity
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -255,8 +321,8 @@ export function SetupCard({
             className="flex-1 min-w-[120px] text-xs bg-transparent border-none outline-none text-zinc-800 placeholder-zinc-400 px-1 py-0.5"
           />
         </div>
-        <p className="text-[11px] text-zinc-500 mt-1.5 font-sans leading-normal">
-          Short or common words like 'bro' or 'H' count as weak matches. Press Enter or comma to add.
+        <p className="text-[11px] text-zinc-500 mt-1.5 font-sans leading-relaxed">
+          💡 <strong>Tip:</strong> Add <strong>both</strong> your name (e.g. <code>Harshit</code>) and phone number (e.g. <code>+91 63666 17607</code>). Press Enter or comma to add each alias.
         </p>
       </div>
 
