@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { parseChat } from './core/parser';
 import { buildBriefing } from './core/briefing';
 import { demoChat, DEMO_USER, demoLastReadAt } from './data/demo';
-import type { ParsedChat, Briefing, UserContext } from './types';
+import type { ParsedChat, Briefing, UserContext, BriefingItem } from './types';
 import { EgressBadge } from './ui/EgressBadge';
 import { Dropzone } from './ui/Dropzone';
 import { SetupCard } from './ui/SetupCard';
 import { StagedProgress, type PipelineStage } from './ui/StagedProgress';
 import { EmptyState } from './ui/EmptyState';
 import { BriefingView } from './ui/BriefingView';
+import { GapStrip } from './ui/GapStrip';
+import { ContextDrawer } from './ui/ContextDrawer';
 import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
@@ -22,6 +24,12 @@ export default function App() {
   const [briefing, setBriefing] = useState<Briefing | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isConfiguring, setIsConfiguring] = useState<boolean>(true);
+
+  // Lineage Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerTargetId, setDrawerTargetId] = useState<number | null>(null);
+  const [drawerSourceIds, setDrawerSourceIds] = useState<number[]>([]);
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
 
   const handleLoadChat = (rawText: string, isDemo = false) => {
     try {
@@ -95,10 +103,51 @@ export default function App() {
     setStage('idle');
     setErrorMsg(null);
     setIsConfiguring(true);
+    setIsDrawerOpen(false);
+  };
+
+  const handleOpenContext = (targetMsgId: number, sourceIds: number[] = []) => {
+    setDrawerTargetId(targetMsgId);
+    setDrawerSourceIds(sourceIds.length > 0 ? sourceIds : [targetMsgId]);
+    setIsDrawerOpen(true);
+  };
+
+  const handleSelectPin = (item: BriefingItem) => {
+    setHighlightedItemId(item.id);
+
+    // Scroll to matching card
+    const cardEl = document.getElementById(`briefing-card-${item.id}`);
+    if (cardEl) {
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      cardEl.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    }
+
+    // Open context drawer for this item
+    const primaryId = item.sourceMessageIds[0] ?? 1;
+    handleOpenContext(primaryId, item.sourceMessageIds);
+
+    // Clear highlight ring after delay
+    setTimeout(() => {
+      setHighlightedItemId(null);
+    }, 1500);
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center py-10 px-4 sm:px-6 antialiased relative">
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center py-8 px-4 sm:px-6 antialiased relative">
+      {/* Skip to Main Content Link for A11y */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-zinc-950 focus:font-bold focus:rounded-xl focus:shadow-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
+
+      {/* Zero Egress Badge */}
       <EgressBadge />
 
       {/* Main App Header */}
@@ -116,7 +165,7 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="w-full max-w-4xl flex flex-col items-center">
+      <main id="main-content" className="w-full max-w-5xl flex flex-col items-center">
         {/* 1. File Upload Dropzone (if no chat loaded) */}
         {!chat && (
           <Dropzone
@@ -149,7 +198,10 @@ export default function App() {
             ) : (
               <div className="w-full flex flex-col lg:flex-row gap-6 items-start">
                 {/* Desktop Left Rail: Quick setup & stats summary */}
-                <aside className="w-full lg:w-72 shrink-0 card p-4 sm:p-5 bg-white border border-zinc-200 shadow-xs space-y-4">
+                <aside
+                  aria-label="Briefing session metadata"
+                  className="w-full lg:w-72 shrink-0 card p-4 sm:p-5 bg-white border border-zinc-200 shadow-xs space-y-4"
+                >
                   <div>
                     <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">
                       User Context
@@ -192,13 +244,27 @@ export default function App() {
                   </div>
                 </aside>
 
-                {/* Right Column: Briefing View */}
+                {/* Right Column: Minimap & Briefing View */}
                 <div className="flex-1 w-full min-w-0">
+                  {/* Step 4: Density Gap Strip Minimap */}
+                  <GapStrip
+                    chatSpan={briefing.chatSpan}
+                    slice={briefing.slice}
+                    items={briefing.items}
+                    allMessages={chat.messages}
+                    onSelectPin={handleSelectPin}
+                  />
+
+                  {/* Step 3: Briefing View */}
                   <BriefingView
                     briefing={briefing}
                     allMessages={chat.messages}
-                    onOpenContext={(msgId) => console.log('Open context for message:', msgId)}
+                    onOpenContext={(msgId) => {
+                      const item = briefing.items.find((i) => i.sourceMessageIds.includes(msgId));
+                      handleOpenContext(msgId, item ? item.sourceMessageIds : [msgId]);
+                    }}
                     onAdjustParameters={() => setIsConfiguring(true)}
+                    highlightedItemId={highlightedItemId}
                   />
                 </div>
               </div>
@@ -206,6 +272,17 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Step 5: Context Lineage Drawer */}
+      {chat && (
+        <ContextDrawer
+          isOpen={isDrawerOpen}
+          targetMessageId={drawerTargetId}
+          sourceMessageIds={drawerSourceIds}
+          allMessages={chat.messages}
+          onClose={() => setIsDrawerOpen(false)}
+        />
+      )}
     </div>
   );
 }

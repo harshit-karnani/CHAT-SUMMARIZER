@@ -1,13 +1,13 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view) + Step 4 (Gap Strip density minimap: 80 normalized flexbox buckets, zinc-300 read vs zinc-800 unread, amber-50 unread band with "you were away" label, keyboard-accessible 44px hit-area pins with tooltips, day ticks, and interactive card scroll + flash ring).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view) + Step 4 (Gap Strip minimap) + Step 5 (Context lineage drawer: right-side slide-over / mobile bottom-sheet, verbatim raw surrounding window of 5 messages before and 5 after, source message highlights, focus trap, ESC dismiss, aria-modal and focus restoration to trigger).
 - **What works**:
-  - Horizontal message density distribution with visual distinction between read context and unread slice.
-  - Interactive action pins with hover/focus tooltips and smooth scroll-to-card navigation.
+  - Direct contextual lineage: users inspect exactly what was said in the raw export around every briefing item.
+  - Keyboard accessible focus trapping and modal management.
   - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 5 — Context lineage drawer (`src/ui/ContextDrawer.tsx`).
+- **Next step**: Chunk 2 Step 6 — Accessibility pass (landmarks, skip link, 44px hit targets, visible focus rings, token contrast verification).
 
 ---
 
@@ -110,6 +110,12 @@
 - **Files Modified**: `src/ui/GapStrip.tsx`, `src/App.tsx`, `prompt.md`.
 - **Key Decisions**: Implemented ARIA group semantics with screen-reader accessible alternative list. Synchronized card highlighting with prefers-reduced-motion checks.
 - **Issues Resolved**: None.
+
+### Step 16: Context Lineage Drawer (Chunk 2 Step 5) [2026-10-09T14:39:30+05:30]
+- **Prompt/Instruction Summary**: Build ContextDrawer component displaying the surrounding raw chat message transcript (5 before, 5 after target message), highlighted source messages, strict keyboard focus trap, ESC closing, aria-modal="true", and focus restoration to the trigger element.
+- **Files Modified**: `src/ui/ContextDrawer.tsx`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Implemented accessible focus cycling trap and mobile-responsive bottom sheet transition.
+- **Issues Resolved**: Resolved unused imports flagged by TypeScript linter.
 
 ---
 
