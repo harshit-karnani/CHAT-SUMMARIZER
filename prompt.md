@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain interfaces, and WhatsApp parser (`src/core/parser.ts`) supporting both Android and iOS formats, 12h/24h timestamps, narrow no-break space normalization, date order auto-detection (dmy vs mdy), system messages, media placeholders, continuation lines, typed `ParseError`, and `.zip`/`.txt` reading via `fflate`.
-- **What works**: WhatsApp parsing for Android and iOS formats, clean TypeScript compilation, and build.
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, and relative date resolution engine (`src/core/dates.ts`) using chrono-node with forwardDate, bare EOD resolution (18:00 same day), ordinal resolution ("on 14th"), and suppression of non-date words ("may", "march").
+- **What works**: All required relative phrases resolve deterministically; parser & date resolution tested and building.
 - **What is broken**: Nothing broken.
-- **Next step**: Step 5 — Relative date resolution (`src/core/dates.ts`).
+- **Next step**: Step 6 — Triage heuristics (`src/core/triage.ts`).
 
 ---
 
@@ -33,6 +33,12 @@
 - **Files Modified**: `src/core/parser.ts`, `prompt.md`.
 - **Key Decisions**: Auto-detected date order through global scan of date parts. Handled zip extraction via `fflate.unzipSync` without network access. Kept file compact (~150 lines).
 - **Issues Resolved**: Resolved TypeScript `verbatimModuleSyntax` type-only import requirements for `Message` and `ParsedChat`.
+
+### Step 5: Relative Date Resolution [2026-10-09T14:04:30+05:30]
+- **Prompt/Instruction Summary**: `src/core/dates.ts` using chrono-node with forwardDate: true and message ts as reference instant. Resolve tomorrow, tonight, by 5 PM, EOD (18:00 same day), Friday, next Monday, on 14th, in 2 hours, by Sunday evening. Ignore matches with neither day nor time-of-day signal, and ignore month words as ordinary text ("may", "march").
+- **Files Modified**: `src/core/dates.ts`, `prompt.md`.
+- **Key Decisions**: Added ordinal pattern recognizer for "on 14th" and bare "EOD" adjuster (18:00 same day / contextual day). Filtered matches lacking day or time signals.
+- **Issues Resolved**: Handled edge case where chrono does not recognize bare "EOD" and bare ordinals without month.
 
 ---
 
