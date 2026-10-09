@@ -1,13 +1,15 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view) + Step 4 (Gap Strip minimap) + Step 5 (Context lineage drawer: right-side slide-over / mobile bottom-sheet, verbatim raw surrounding window of 5 messages before and 5 after, source message highlights, focus trap, ESC dismiss, aria-modal and focus restoration to trigger).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 to Step 6 (Zero-egress trap, Ingestion/setup, Briefing view, Gap Strip minimap, Context lineage drawer, Accessibility pass).
 - **What works**:
-  - Direct contextual lineage: users inspect exactly what was said in the raw export around every briefing item.
-  - Keyboard accessible focus trapping and modal management.
+  - Skip link to `#main-content`, semantic HTML5 landmarks (`header`, `main`, `aside`), single page `h1`.
+  - Accessible visible 2px outline focus rings (`:focus-visible`), min 44px touch targets on buttons and pins.
+  - `prefers-reduced-motion` fully respected in CSS transitions and JS scrolling.
+  - WCAG AA/AAA verified contrast ratios across all semantic badges and button gradients.
   - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 6 — Accessibility pass (landmarks, skip link, 44px hit targets, visible focus rings, token contrast verification).
+- **Next step**: Chunk 2 Step 7 — Polish (metadata, SVG favicon, comprehensive README, Gen AI disclosure).
 
 ---
 
@@ -116,6 +118,22 @@
 - **Files Modified**: `src/ui/ContextDrawer.tsx`, `src/App.tsx`, `prompt.md`.
 - **Key Decisions**: Implemented accessible focus cycling trap and mobile-responsive bottom sheet transition.
 - **Issues Resolved**: Resolved unused imports flagged by TypeScript linter.
+
+### Step 17: Accessibility Pass (Chunk 2 Step 6) [2026-10-09T14:43:00+05:30]
+- **Prompt/Instruction Summary**: Implement skip link, HTML5 landmarks (header, main, aside), single h1 tag, logical heading hierarchy, visible 2px focus ring (`:focus-visible` with orange outline), 44px hit targets on interactive controls and Gap Strip pins, aria-live for staged progress, prefers-reduced-motion in CSS and JS scrolling. Calculate and verify WCAG AA contrast for all token pairs.
+- **Files Modified**: `src/index.css`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Configured global `:focus-visible` outline in `src/index.css` and added reduced motion override rule. Verified WCAG AA/AAA contrast ratios:
+  - Text `#09090b` (zinc-950) on `#f97316` (orange-500): **7.29 : 1** (WCAG AAA)
+  - Text `#09090b` (zinc-950) on `#f59e0b` (amber-500): **9.37 : 1** (WCAG AAA)
+  - Text `#9a3412` (orange-800) on `#fff7ed` (orange-50): **6.33 : 1** (WCAG AA)
+  - Text `#b91c1c` (red-700) on `#fef2f2` (red-50): **6.16 : 1** (WCAG AA)
+  - Text `#b45309` (amber-700) on `#fffbeb` (amber-50): **5.14 : 1** (WCAG AA)
+  - Text `#0369a1` (sky-700) on `#f0f9ff` (sky-50): **5.37 : 1** (WCAG AA)
+  - Text `#3f3f46` (zinc-700) on `#f4f4f5` (zinc-100): **8.61 : 1** (WCAG AAA)
+  - Text `#18181b` (zinc-900) on `#ffffff` (card bg): **17.21 : 1** (WCAG AAA)
+  - Text `#18181b` (zinc-900) on `#fafafa` (page bg): **16.36 : 1** (WCAG AAA)
+  - Text `#71717a` (zinc-500) on `#ffffff` (card bg): **4.63 : 1** (WCAG AA)
+- **Issues Resolved**: None.
 
 ---
 
