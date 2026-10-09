@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, and briefing builder (`src/core/briefing.ts`) with unread slice filtering, candidate selection (score >= 25), 15-minute clustering, deterministic templating, and prioritized ordering.
-- **What works**: Unread slice slicing, multi-message clustering, grounded citation linking to original message IDs, priority sorting (needs_you -> deadline -> decision -> fyi).
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, and RFC 5545 ICS calendar export (`src/core/ics.ts`) with client-side blob download.
+- **What works**: RFC 5545 VCALENDAR event generation with UTC timestamps, proper escaping, and browser-native download without server roundtrips.
 - **What is broken**: Nothing broken.
-- **Next step**: Step 8 — Calendar export (`src/core/ics.ts`).
+- **Next step**: Step 9 — Bundled demo dataset (`scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`).
 
 ---
 
@@ -50,6 +50,12 @@
 - **Prompt/Instruction Summary**: `src/core/briefing.ts` exporting `buildBriefing(chat, user)`. Unread slice (ts > lastReadAt), candidates (score >= 25), 15m consecutive clustering, classification (needs_you, deadline, decision, fyi), deterministic grounded summaries, sorting by priority & score.
 - **Files Modified**: `src/core/briefing.ts`, `prompt.md`.
 - **Key Decisions**: Clustered candidates within 15-minute bursts to prevent duplicate action items. Guaranteed grounded citation by attaching `sourceMessageIds`.
+- **Issues Resolved**: None.
+
+### Step 8: Calendar Export (RFC 5545) [2026-10-09T14:07:15+05:30]
+- **Prompt/Instruction Summary**: `src/core/ics.ts` exporting `makeIcs(item)` producing RFC 5545 VCALENDAR/VEVENT format, and `downloadIcs(item)` using Blob and DOM temporary link for client-only download.
+- **Files Modified**: `src/core/ics.ts`, `prompt.md`.
+- **Key Decisions**: Implemented RFC 5545 character escaping (commas, semicolons, backslashes, newlines), standard 1-hour event block, and deterministic UID generation.
 - **Issues Resolved**: None.
 
 ---
