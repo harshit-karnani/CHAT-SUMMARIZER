@@ -8,7 +8,7 @@
       var parsed = new URL(urlStr, window.location.href);
       host = parsed.hostname;
       pathname = parsed.pathname;
-    } catch (e) {
+    } catch {
       host = '';
       pathname = '';
     }
@@ -23,7 +23,7 @@
     window.__egress.push(entry);
     try {
       window.dispatchEvent(new CustomEvent('egress-call', { detail: entry }));
-    } catch (e) {}
+    } catch {}
   }
 
   var origFetch = window.fetch;

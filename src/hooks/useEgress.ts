@@ -28,10 +28,9 @@ export function useEgress(): {
     return [];
   });
 
-  const [isAirplaneReady, setIsAirplaneReady] = useState<boolean>(false);
+  const [isAirplaneReady] = useState<boolean>(() => typeof window !== 'undefined');
 
   useEffect(() => {
-    setIsAirplaneReady(true);
 
     if (typeof window !== 'undefined' && typeof window.__egressSubscribe === 'function') {
       const unsub = window.__egressSubscribe(() => {

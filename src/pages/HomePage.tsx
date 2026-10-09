@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, RotateCcw, Trash2, HelpCircle, ShieldCheck } from 'lucide-react';
 import { Dropzone } from '../ui/Dropzone';
 import { demoChat } from '../data/demo';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../context/useChat';
 
 export function HomePage() {
   const navigate = useNavigate();

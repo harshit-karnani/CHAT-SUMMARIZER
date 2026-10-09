@@ -34,8 +34,8 @@ export function SetupCard({
   onResetChat,
   isProcessing = false,
 }: SetupCardProps) {
-  const minTs = chat.messages[0]?.ts ?? Date.now();
-  const maxTs = chat.messages[chat.messages.length - 1]?.ts ?? Date.now();
+  const minTs = chat.messages[0]?.ts ?? 0;
+  const maxTs = chat.messages[chat.messages.length - 1]?.ts ?? minTs;
 
   const [aliasInput, setAliasInput] = useState('');
   const [senderFilter, setSenderFilter] = useState('');

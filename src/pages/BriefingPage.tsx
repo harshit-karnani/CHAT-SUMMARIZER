@@ -5,7 +5,7 @@ import { GapStrip } from '../ui/GapStrip';
 import { BriefingView } from '../ui/BriefingView';
 import { ContextDrawer } from '../ui/ContextDrawer';
 import { EmptyState } from '../ui/EmptyState';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../context/useChat';
 import type { BriefingItem } from '../types';
 
 export function BriefingPage() {

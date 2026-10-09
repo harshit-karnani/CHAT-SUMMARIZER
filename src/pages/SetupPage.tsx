@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SetupCard } from '../ui/SetupCard';
 import { StagedProgress } from '../ui/StagedProgress';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../context/useChat';
 
 export function SetupPage() {
   const navigate = useNavigate();

@@ -3,10 +3,10 @@ import { ParseError } from '../types';
 import type { Message, ParsedChat } from '../types';
 
 const ANDROID_REGEX =
-  /^(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[apAP]\.?[mM]\.?)?)\s*-\s*(.*)$/;
+  /^(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[apAP]\.?[mM]\.?)?)\s*-\s*(.*)$/;
 
 const IOS_REGEX =
-  /^\[(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[apAP]\.?[mM]\.?)?)\]\s*(.*)$/;
+  /^\[(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202f]*[apAP]\.?[mM]\.?)?)\]\s*(.*)$/;
 
 const MEDIA_PLACEHOLDERS =
   /^(<media omitted>|media omitted|<image omitted>|image omitted|<sticker omitted>|sticker omitted|<video omitted>|video omitted|<audio omitted>|audio omitted|<document omitted>|document omitted|this message was deleted|you deleted this message|null)$/i;
@@ -60,7 +60,7 @@ function parseTime(timeStr: string): { hours: number; minutes: number; seconds: 
 }
 
 function parseTimestamp(dateStr: string, timeStr: string, dateOrder: 'dmy' | 'mdy'): number {
-  const parts = dateStr.split(/[\/.-]/).map((p) => parseInt(p, 10));
+  const parts = dateStr.split(/[/.-]/).map((p) => parseInt(p, 10));
   if (parts.length < 3) return Date.now();
 
   const [p1, p2, p3] = parts;
@@ -85,7 +85,7 @@ function detectDateOrder(lines: string[]): { dateOrder: 'dmy' | 'mdy'; format: '
     if (match.format === 'ios') iosCount++;
     else androidCount++;
 
-    const parts = match.dateStr.split(/[\/.-]/).map((p) => parseInt(p, 10));
+    const parts = match.dateStr.split(/[/.-]/).map((p) => parseInt(p, 10));
     if (parts.length >= 2) {
       if (parts[0] > 12) anyFirstAbove12 = true;
       if (parts[1] > 12) anySecondAbove12 = true;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, VolumeX } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, VolumeX, Copy, Check, Download } from 'lucide-react';
 import type { Briefing, Message, ParsedChat, UserContext } from '../types';
 import { BriefingItemCard } from './BriefingItemCard';
 import { ExecutiveSummary } from './ExecutiveSummary';
@@ -48,6 +48,71 @@ export function BriefingView({
   const noiseMessages = unreadMessages.filter((m) => !clusteredIds.has(m.id) && !m.isSystem);
 
   const msgMap = new Map<number, Message>(allMessages.map((m) => [m.id, m]));
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyBriefing = async () => {
+    const lines: string[] = [
+      '# 📋 SplitOff Executive Briefing — While you were out',
+      `> ${briefing.missedCount} messages · ${estimatedReadMin} min read compressed into 40 seconds`,
+      '',
+    ];
+
+    if (needsYouItems.length > 0) {
+      lines.push('## 🔴 Needs You');
+      for (const item of needsYouItems) {
+        lines.push(`- **${item.title}**: ${item.summary} (${item.reason})`);
+      }
+      lines.push('');
+    }
+
+    if (deadlineItems.length > 0) {
+      lines.push('## ⏰ Deadlines');
+      for (const item of deadlineItems) {
+        lines.push(`- **${item.title}**: ${item.summary} [${item.reason}]`);
+      }
+      lines.push('');
+    }
+
+    if (decisionItems.length > 0) {
+      lines.push('## 🟢 Decisions');
+      for (const item of decisionItems) {
+        lines.push(`- **${item.title}**: ${item.summary}`);
+      }
+      lines.push('');
+    }
+
+    if (fyiItems.length > 0) {
+      lines.push('## ℹ️ FYI');
+      for (const item of fyiItems) {
+        lines.push(`- **${item.title}**: ${item.summary}`);
+      }
+      lines.push('');
+    }
+
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch {}
+  };
+
+  const handleDownloadMarkdown = () => {
+    const content = [
+      '# 📋 SplitOff Executive Briefing',
+      `Generated on: ${new Date().toLocaleString()}`,
+      `Total Messages: ${chat.messages.length} (${briefing.missedCount} unread)`,
+      '',
+      ...briefing.items.map((i) => `### [${i.kind.toUpperCase()}] ${i.title}\n${i.summary}\n_${i.reason}_\n`),
+    ].join('\n');
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `splitoff-briefing-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -62,14 +127,43 @@ export function BriefingView({
               While you were out
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={onAdjustParameters}
-            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Adjust parameters</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleCopyBriefing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+              title="Copy markdown formatted briefing to clipboard"
+            >
+              {isCopied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="text-emerald-700 font-bold">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Copy Briefing</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadMarkdown}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+              title="Export as markdown file"
+            >
+              <Download className="w-3.5 h-3.5 text-zinc-500" />
+              <span>Export .md</span>
+            </button>
+            <button
+              type="button"
+              onClick={onAdjustParameters}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
+              <span>Adjust parameters</span>
+            </button>
+          </div>
         </div>
 
         {/* Read Time & Speedup Stat */}

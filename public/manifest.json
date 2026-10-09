@@ -1,0 +1,17 @@
+{
+  "name": "SplitOff — WhatsApp Executive Briefing",
+  "short_name": "SplitOff",
+  "description": "Zero-egress executive briefing engine for WhatsApp chats. Client-only deterministic heuristics with optional AI synthesis.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#F97316",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

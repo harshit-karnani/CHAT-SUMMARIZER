@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { ShieldCheck, Home, Settings2, FileText, Lock, HelpCircle } from 'lucide-react';
 import { EgressBadge } from './EgressBadge';
-import { useChat } from '../context/ChatContext';
+import { useChat } from '../context/useChat';
 
 export function Navigation() {
   const { sessionStartTs, geminiLinesSent, chat, isStoredLocally } = useChat();

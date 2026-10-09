@@ -1,32 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { parseChat } from '../core/parser';
 import { buildBriefing } from '../core/briefing';
 import { DEMO_USER, demoLastReadAt } from '../data/demo';
 import { saveSession, loadSession, clearSession } from '../core/store';
 import type { ParsedChat, Briefing, UserContext } from '../types';
-import type { PipelineStage } from '../ui/StagedProgress';
-
-interface ChatContextType {
-  chat: ParsedChat | null;
-  rawText: string | null;
-  userContext: UserContext;
-  setUserContext: (ctx: UserContext) => void;
-  updateUserContextAndPersist: (ctx: UserContext) => void;
-  briefing: Briefing | null;
-  isHydrating: boolean;
-  stage: PipelineStage;
-  errorMsg: string | null;
-  isStoredLocally: boolean;
-  sessionStartTs: number;
-  geminiLinesSent: number;
-  setGeminiLinesSent: React.Dispatch<React.SetStateAction<number>>;
-  loadChat: (raw: string, isDemo?: boolean) => boolean;
-  runBriefing: () => Promise<boolean>;
-  forgetChat: () => Promise<void>;
-  resetToSetup: () => void;
-}
-
-const ChatContext = createContext<ChatContextType | null>(null);
+import { ChatContext, type PipelineStage } from './chatContextDef';
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [chat, setChat] = useState<ParsedChat | null>(null);
@@ -226,10 +204,4 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useChat() {
-  const ctx = useContext(ChatContext);
-  if (!ctx) {
-    throw new Error('useChat must be used within a ChatProvider');
-  }
-  return ctx;
-}
+
