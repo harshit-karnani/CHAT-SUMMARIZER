@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain interfaces in `src/types.ts` (`Message`, `ParsedChat`, `Signal`, `TriageResult`, `BriefingItem`, `Briefing`, `UserContext`, `ParseError`).
-- **What works**: Clean production build, strict TypeScript definitions.
+- **What is built**: Project scaffold, design tokens, core domain interfaces, and WhatsApp parser (`src/core/parser.ts`) supporting both Android and iOS formats, 12h/24h timestamps, narrow no-break space normalization, date order auto-detection (dmy vs mdy), system messages, media placeholders, continuation lines, typed `ParseError`, and `.zip`/`.txt` reading via `fflate`.
+- **What works**: WhatsApp parsing for Android and iOS formats, clean TypeScript compilation, and build.
 - **What is broken**: Nothing broken.
-- **Next step**: Step 4 — WhatsApp Parser (`src/core/parser.ts`).
+- **Next step**: Step 5 — Relative date resolution (`src/core/dates.ts`).
 
 ---
 
@@ -27,6 +27,12 @@
 - **Files Modified**: `src/types.ts`, `prompt.md`.
 - **Key Decisions**: Defined clean, strict types supporting zero-egress briefing representation with epoch timestamps. Added custom `ParseError` class.
 - **Issues Resolved**: None.
+
+### Step 4: WhatsApp Parser (Android + iOS) [2026-10-09T14:01:45+05:30]
+- **Prompt/Instruction Summary**: Regex parser in `src/core/parser.ts` for Android and iOS chat exports. Auto-detect date order across all headers (> 12 detection), strip unicode marks (\u200e, \u200f), support 12h/24h and narrow no-break space (\u202f), identify system messages and media placeholders, handle multiline continuations, export `parseChat` and `readUploadedFile` (.txt and .zip with fflate).
+- **Files Modified**: `src/core/parser.ts`, `prompt.md`.
+- **Key Decisions**: Auto-detected date order through global scan of date parts. Handled zip extraction via `fflate.unzipSync` without network access. Kept file compact (~150 lines).
+- **Issues Resolved**: Resolved TypeScript `verbatimModuleSyntax` type-only import requirements for `Message` and `ParsedChat`.
 
 ---
 
