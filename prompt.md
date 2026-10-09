@@ -1,14 +1,12 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, bundled demo chat dataset, placeholder shell (`src/App.tsx`), vitest suite (`tests/parser.test.ts`), and automated smoke test script (`scripts/smoke.ts`, `npm run smoke`).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (inline zero-egress trap in `index.html` wrapping fetch/XHR/sendBeacon, `useEgress()` hook, and `EgressBadge` component displaying 0 Network Calls with interactive audit popover and Airplane mode indicator).
 - **What works**:
-  - `npm run build` succeeds cleanly with self-hosted Manrope variable fonts and zero external network calls.
-  - `npm run smoke` validates 420 non-system messages parsed with `node:fs`, all 4 planted categories detected (direct asks: 5, deadlines: 3, decisions: 3, open questions: 2), and zero hallucinated message IDs.
-  - `npm test` runs vitest with 3/3 passing parser test cases (Android format, iOS format, system lines with colons).
-  - Design tokens verified for WCAG AA contrast (button gradient with zinc-950 text at 7.29:1 / 9.37:1; orange-50 badge with orange-800 text at 6.36:1).
+  - Zero network egress verified and trapped; badge shows green "0 Network Calls | 100% On-Device" and popover opens with empty-state confirmation.
+  - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Ready for Chunk 2 (Full UI Implementation).
+- **Next step**: Chunk 2 Step 2 — Ingestion and setup view (drag & drop dropzone, demo loader, sender radio group, alias chips, time range slider with presets, and staged progress runner).
 
 ---
 
@@ -87,6 +85,12 @@
 - **Files Modified**: `src/core/triage.ts`, `scripts/smoke.ts`, `scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/index.css`, `src/App.tsx`, `src/core/parser.ts`, `tests/parser.test.ts`, `package.json`, `package-lock.json`, `prompt.md`.
 - **Key Decisions**: Separated strong and weak alias regex matching. Employed `vitest` for test execution.
 - **Issues Resolved**: Prevented Node CLI ?raw module resolution errors in smoke runner.
+
+### Step 12: Zero-Egress Trap & Network Badge (Chunk 2 Step 1) [2026-10-09T14:28:40+05:30]
+- **Prompt/Instruction Summary**: Inline zero-egress script in `index.html` wrapping `window.fetch`, `XMLHttpRequest.prototype.open/send`, and `navigator.sendBeacon` to log to `window.__egress` without blocking. Add `useEgress()` hook and fixed top badge (`EgressBadge.tsx`) showing "0 Network Calls | 100% On-Device" in green, turns red on call, with interactive "Network log" popover and "Airplane mode ready" indicator.
+- **Files Modified**: `index.html`, `src/hooks/useEgress.ts`, `src/ui/EgressBadge.tsx`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Ran egress interceptor before ES modules load. Dispatched custom `egress-call` event to allow instant reactive updates in React without polling.
+- **Issues Resolved**: None.
 
 ---
 

@@ -3,6 +3,7 @@ import { parseChat } from './core/parser';
 import { buildBriefing } from './core/briefing';
 import { demoChat, DEMO_USER } from './data/demo';
 import { ShieldCheck, Sparkles, Clock, CheckCircle2, UserCheck } from 'lucide-react';
+import { EgressBadge } from './ui/EgressBadge';
 
 export default function App() {
   const { parsed, briefing } = useMemo(() => {
@@ -20,7 +21,8 @@ export default function App() {
   const itemCount = briefing?.items.length ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center justify-center p-6 antialiased">
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center justify-center p-6 antialiased relative">
+      <EgressBadge />
       {/* Header */}
       <header className="mb-8 text-center max-w-lg">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold mb-3">
