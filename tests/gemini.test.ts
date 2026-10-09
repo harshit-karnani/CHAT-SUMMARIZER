@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { geminiSummarize } from '../src/core/gemini';
+import { summarize, geminiSummarize } from '../src/core/gemini';
 
-describe('geminiSummarize', () => {
+describe('client summarize (/api/summarize)', () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
@@ -12,86 +12,64 @@ describe('geminiSummarize', () => {
     globalThis.fetch = originalFetch;
   });
 
-  it('returns null on empty key or empty lines without calling fetch', async () => {
+  it('returns null on empty lines without calling fetch', async () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock;
 
-    expect(await geminiSummarize([], 'test-key')).toBeNull();
-    expect(await geminiSummarize(['Alice: Hello'], '')).toBeNull();
+    expect(await summarize([])).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('returns clean summary on successful response', async () => {
-    const sampleOutput = 'Team agreed to deploy on Friday. Kabir is blocked on API credentials.';
+  it('returns clean summary on successful response from /api/summarize', async () => {
+    const sampleOutput = 'Team agreed to deploy on Friday. Blockers cleared.';
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [{ text: `**${sampleOutput}**` }],
-            },
-          },
-        ],
-      }),
+      json: async () => ({ summary: sampleOutput }),
     });
 
-    const result = await geminiSummarize(['Alice: Let us launch Friday', 'Kabir: Need API key'], 'test-key');
+    const result = await summarize(['Alice: Launch Friday']);
     expect(result).toBe(sampleOutput);
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/summarize', expect.objectContaining({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lines: ['Alice: Launch Friday'] }),
+    }));
   });
 
   it('returns null on non-200 HTTP response', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
-      status: 403,
-      json: async () => ({ error: { message: 'API key not valid' } }),
+      status: 502,
+      json: async () => ({ summary: null }),
     });
 
-    const result = await geminiSummarize(['Alice: Hey'], 'bad-key');
+    const result = await summarize(['Alice: Launch Friday']);
     expect(result).toBeNull();
   });
 
-  it('returns null when model responds UNCLEAR', async () => {
+  it('returns null when server responds with summary: null', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [{ text: 'UNCLEAR.' }],
-            },
-          },
-        ],
-      }),
+      json: async () => ({ summary: null }),
     });
 
-    const result = await geminiSummarize(['Alice: ???'], 'test-key');
+    const result = await summarize(['Alice: ???']);
     expect(result).toBeNull();
   });
 
-  it('returns null when model responds with too many words (> 70 words)', async () => {
-    const longText = new Array(75).fill('word').join(' ');
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        candidates: [
-          {
-            content: {
-              parts: [{ text: longText }],
-            },
-          },
-        ],
-      }),
-    });
-
-    const result = await geminiSummarize(['Alice: Some talk'], 'test-key');
-    expect(result).toBeNull();
-  });
-
-  it('returns null on timeout / abort error', async () => {
+  it('returns null on abort / timeout error without throwing', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('The operation was aborted'));
 
-    const result = await geminiSummarize(['Alice: Timeout test'], 'test-key', 50);
+    const result = await summarize(['Alice: Slow response'], 50);
     expect(result).toBeNull();
+  });
+
+  it('geminiSummarize alias works identically', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ summary: 'Alias summary works.' }),
+    });
+
+    expect(await geminiSummarize(['Line 1'])).toBe('Alias summary works.');
   });
 });

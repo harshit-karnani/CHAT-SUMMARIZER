@@ -1,6 +1,6 @@
-import { Lock, ShieldCheck, ShieldAlert, Plane } from 'lucide-react';
+import { Lock, ShieldAlert, Plane, Cloud } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useEgress } from '../hooks/useEgress';
+import { useEgress, type EgressCall } from '../hooks/useEgress';
 
 interface EgressBadgeProps {
   sessionStartTs?: number;
@@ -13,28 +13,34 @@ export function EgressBadge({ sessionStartTs = 0, geminiLinesSent = 0 }: EgressB
   // Session calls filtered for this chat
   const sessionCalls = calls.filter((c) => c.ts >= sessionStartTs);
 
-  // Check alert condition: any call with body or non-GET to host OTHER than generativelanguage.googleapis.com
+  const isSummarizeProxyCall = (c: EgressCall) => {
+    const isPath =
+      c.pathname === '/api/summarize' ||
+      c.url === '/api/summarize' ||
+      c.url.endsWith('/api/summarize') ||
+      c.url.includes('/api/summarize');
+    const isSameHost =
+      !c.host ||
+      (typeof window !== 'undefined' &&
+        (c.host === window.location.hostname || c.host === 'localhost' || c.host === '127.0.0.1'));
+    return isPath && isSameHost;
+  };
+
+  // Check alert condition: any call with body or non-GET to host/path OTHER than same-origin /api/summarize
   const alertCalls = sessionCalls.filter((c) => {
-    const isGeminiHost =
-      c.host === 'generativelanguage.googleapis.com' ||
-      c.url.includes('generativelanguage.googleapis.com');
     const hasBodyOrNonGet = c.bodyBytes > 0 || c.method !== 'GET';
-    return hasBodyOrNonGet && !isGeminiHost;
+    return hasBodyOrNonGet && !isSummarizeProxyCall(c);
   });
 
-  const geminiCalls = sessionCalls.filter((c) => {
-    return (
-      (c.host === 'generativelanguage.googleapis.com' ||
-        c.url.includes('generativelanguage.googleapis.com')) &&
-      c.bodyBytes > 0
-    );
+  const summarizeCalls = sessionCalls.filter((c) => {
+    return isSummarizeProxyCall(c) && c.bodyBytes > 0;
   });
 
   const isAlert = alertCalls.length > 0;
-  const isCloud = !isAlert && (geminiCalls.length > 0 || geminiLinesSent > 0);
+  const isCloud = !isAlert && (summarizeCalls.length > 0 || geminiLinesSent > 0);
   const isLocal = !isAlert && !isCloud;
 
-  const linesSentCount = geminiLinesSent > 0 ? geminiLinesSent : geminiCalls.length * 40;
+  const linesSentCount = geminiLinesSent > 0 ? geminiLinesSent : summarizeCalls.length * 40;
 
   return (
     <div className="flex items-center gap-2" aria-live="polite">
@@ -57,7 +63,7 @@ export function EgressBadge({ sessionStartTs = 0, geminiLinesSent = 0 }: EgressB
           isAlert
             ? `Security alert: ${alertCalls.length} unexpected outbound calls detected`
             : isCloud
-            ? `Sanitized Cloud Synthesis: ${linesSentCount} lines sent`
+            ? `Redacted lines sent to Gemini via our server: ${linesSentCount} lines sent`
             : '100% Local Heuristics Active: 0 Data Sent'
         }
         className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer shadow-2xs focus-visible:outline-2 focus-visible:outline-offset-2 ${
@@ -71,7 +77,7 @@ export function EgressBadge({ sessionStartTs = 0, geminiLinesSent = 0 }: EgressB
         {isAlert ? (
           <ShieldAlert className="w-3.5 h-3.5 text-red-700 shrink-0" />
         ) : isCloud ? (
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-900 shrink-0" />
+          <Cloud className="w-3.5 h-3.5 text-amber-900 shrink-0" />
         ) : (
           <Lock className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
         )}
@@ -79,7 +85,7 @@ export function EgressBadge({ sessionStartTs = 0, geminiLinesSent = 0 }: EgressB
           {isAlert
             ? `${alertCalls.length} Unauthorized Egress Call${alertCalls.length === 1 ? '' : 's'}`
             : isCloud
-            ? `Sanitized Cloud Synthesis (Credentials Redacted Locally) · ${linesSentCount} lines sent`
+            ? `Redacted lines sent to Gemini via our server (${linesSentCount} lines sent)`
             : '100% Local Heuristics Active (0 Data Sent)'}
         </span>
       </Link>

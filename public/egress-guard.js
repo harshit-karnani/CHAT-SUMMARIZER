@@ -3,17 +3,21 @@
   function logEgress(url, method, bodyBytes) {
     var urlStr = String(url || '');
     var host = '';
+    var pathname = '';
     try {
       var parsed = new URL(urlStr, window.location.href);
       host = parsed.hostname;
+      pathname = parsed.pathname;
     } catch (e) {
       host = '';
+      pathname = '';
     }
     var entry = {
       url: urlStr,
       method: String(method || 'GET').toUpperCase(),
       bodyBytes: Number(bodyBytes || 0),
       host: host,
+      pathname: pathname,
       ts: Date.now()
     };
     window.__egress.push(entry);

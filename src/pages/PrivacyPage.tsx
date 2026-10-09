@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock, ShieldCheck, ShieldAlert, ArrowLeft, CheckCircle2, FileCode } from 'lucide-react';
+import { Lock, Cloud, ShieldAlert, ArrowLeft, CheckCircle2, FileCode, Server } from 'lucide-react';
 import { useEgress } from '../hooks/useEgress';
 
 export function PrivacyPage() {
   const { calls } = useEgress();
 
   useEffect(() => {
-    document.title = 'Network & Privacy Log — CatchUp Zero';
+    document.title = 'Network & Privacy Log — SplitOff';
   }, []);
 
   return (
@@ -31,7 +31,37 @@ export function PrivacyPage() {
         </div>
       </div>
 
-      {/* 1. Badge States Explainer */}
+      {/* 1. Architecture Flow Explainer */}
+      <section className="card p-5 bg-white border border-zinc-200/80 shadow-2xs space-y-3">
+        <div className="flex items-center gap-2">
+          <Server className="w-4 h-4 text-orange-600" />
+          <h2 className="text-sm font-display font-bold text-zinc-900">
+            Hybrid Privacy-Gated Architecture
+          </h2>
+        </div>
+        <p className="text-xs text-zinc-600 font-sans leading-relaxed">
+          SplitOff operates on a <strong>deterministic-first, zero-egress default</strong>. Full chat parsing, date resolution, action-item scoring, and heuristic briefing generation execute entirely inside your browser tab without any network traffic.
+        </p>
+        <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200 font-mono text-[11px] text-zinc-700 leading-relaxed overflow-x-auto">
+          <code>
+            [Client: Local Chat Parsing & Heuristics] (100% in RAM)
+            <br />
+            &nbsp;&nbsp;&darr; (Only if user clicks &ldquo;Generate Executive Briefing&rdquo;)
+            <br />
+            [Client-Side Regex Redactor] (Strips passwords, keys, phones, emails, OTPs)
+            <br />
+            &nbsp;&nbsp;&darr;
+            <br />
+            [Same-Origin POST /api/summarize] (Rate-limited, origin-verified, serverless proxy)
+            <br />
+            &nbsp;&nbsp;&darr; (Server holds GEMINI_API_KEY &mdash; zero keys on client)
+            <br />
+            [Google Gemini 2.5 Flash] &rarr; Returns 2-sentence executive summary
+          </code>
+        </div>
+      </section>
+
+      {/* 2. Badge States Explainer */}
       <section className="card p-5 bg-white border border-zinc-200/80 shadow-2xs space-y-3">
         <h2 className="text-sm font-display font-bold text-zinc-900">
           Privacy Badge States Explained
@@ -49,11 +79,11 @@ export function PrivacyPage() {
 
           <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1.5">
             <div className="flex items-center gap-1.5 font-bold text-amber-900">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-800" />
+              <Cloud className="w-3.5 h-3.5 text-amber-800" />
               <span>CLOUD (Amber)</span>
             </div>
             <p className="text-[11px] text-amber-900 leading-relaxed font-sans">
-              Sanitized Cloud Synthesis. Triggered only when you provide a Gemini API key and explicitly click Send. Credentials and PII are redacted on-device before transmission.
+              Redacted lines sent via server proxy. Triggered only when you explicitly click &ldquo;Generate Executive Briefing&rdquo;. Credentials and PII are scrubbed locally before transmission.
             </p>
           </div>
 
@@ -63,13 +93,13 @@ export function PrivacyPage() {
               <span>ALERT (Red)</span>
             </div>
             <p className="text-[11px] text-red-900 leading-relaxed font-sans">
-              Unauthorized Egress. Displays immediately if any request with a body or non-GET method targets an untrusted host.
+              Unauthorized Egress. Displays immediately if any request with a payload or non-GET method targets an endpoint other than the same-origin summary proxy.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 2. Client-Side Redactor Explainer */}
+      {/* 3. Client-Side Redactor Explainer */}
       <section className="card p-5 bg-white border border-zinc-200/80 shadow-2xs space-y-3">
         <div className="flex items-center gap-2">
           <FileCode className="w-4 h-4 text-orange-600" />
@@ -108,7 +138,7 @@ export function PrivacyPage() {
         </div>
       </section>
 
-      {/* 3. Session Network Interceptor Log Table */}
+      {/* 4. Session Network Interceptor Log Table */}
       <section className="card p-5 bg-white border border-zinc-200/80 shadow-2xs space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
           <h2 className="text-sm font-display font-bold text-zinc-900">
@@ -131,38 +161,41 @@ export function PrivacyPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {calls.map((call, idx) => (
-              <div
-                key={idx}
-                className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 font-mono text-xs space-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
-                        call.url.includes('googleapis.com')
-                          ? 'bg-amber-100 text-amber-900'
-                          : 'bg-red-100 text-red-900'
-                      }`}
-                    >
-                      {call.method}
-                    </span>
-                    <span className="text-zinc-800 font-semibold truncate max-w-sm">
-                      {call.host || 'Unknown Host'}
+            {calls.map((call, idx) => {
+              const isSummarize = call.url.includes('/api/summarize');
+              return (
+                <div
+                  key={idx}
+                  className="p-3 rounded-xl bg-zinc-50 border border-zinc-200 font-mono text-xs space-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
+                          isSummarize
+                            ? 'bg-amber-100 text-amber-900'
+                            : 'bg-red-100 text-red-900'
+                        }`}
+                      >
+                        {call.method}
+                      </span>
+                      <span className="text-zinc-800 font-semibold truncate max-w-sm">
+                        {call.host || window.location.hostname || 'Same Origin'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400">
+                      {new Date(call.ts).toLocaleTimeString()}
                     </span>
                   </div>
-                  <span className="text-[10px] text-zinc-400">
-                    {new Date(call.ts).toLocaleTimeString()}
-                  </span>
+                  <div className="text-[11px] text-zinc-600 truncate" title={call.url}>
+                    {call.url}
+                  </div>
+                  <div className="text-[10px] text-zinc-400 pt-0.5">
+                    Payload size: {call.bodyBytes} bytes
+                  </div>
                 </div>
-                <div className="text-[11px] text-zinc-600 truncate" title={call.url}>
-                  {call.url}
-                </div>
-                <div className="text-[10px] text-zinc-400 pt-0.5">
-                  Payload size: {call.bodyBytes} bytes
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

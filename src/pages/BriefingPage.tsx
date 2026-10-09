@@ -15,7 +15,6 @@ export function BriefingPage() {
     chat,
     userContext,
     briefing,
-    apiKey,
     isHydrating,
     forgetChat,
     setGeminiLinesSent,
@@ -185,7 +184,6 @@ export function BriefingPage() {
               chat={chat}
               briefing={briefing}
               user={userContext}
-              apiKey={apiKey}
               allMessages={chat.messages}
               onOpenContext={handleOpenContext}
               onAdjustParameters={() => navigate('/setup')}

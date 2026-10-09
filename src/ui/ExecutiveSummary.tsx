@@ -1,15 +1,13 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Sparkles, Loader2, ChevronRight, Eye } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Sparkles, Loader2, ChevronDown, ShieldCheck, AlertCircle } from 'lucide-react';
 import type { Briefing, ParsedChat, UserContext } from '../types';
-import { buildCloudPayload, type CloudPayload } from '../core/payload';
+import { buildCloudPayload } from '../core/payload';
 import { geminiSummarize } from '../core/gemini';
 
 interface ExecutiveSummaryProps {
   chat: ParsedChat;
   briefing: Briefing;
   user: UserContext;
-  apiKey: string;
   onSendCloudRequest?: (linesCount: number) => void;
 }
 
@@ -26,16 +24,13 @@ export function ExecutiveSummary({
   chat,
   briefing,
   user,
-  apiKey,
   onSendCloudRequest,
 }: ExecutiveSummaryProps) {
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
-  const [payload, setPayload] = useState<CloudPayload | null>(null);
   const [geminiSummary, setGeminiSummary] = useState<string | null>(null);
   const [geminiStatus, setGeminiStatus] = useState<'idle' | 'success' | 'failed'>('idle');
 
-  // Deterministic Engine 1 summary (never blank)
+  // Deterministic Engine 1 summary (never blank, 100% on-device)
   const needsCount = briefing.counts.needs_you;
   const deadlineCount = briefing.counts.deadline;
   const decisionCount = briefing.counts.decision;
@@ -65,17 +60,16 @@ export function ExecutiveSummary({
     decisionCount === 1 ? 'decision' : 'decisions'
   }${topAskStr}`;
 
-  const handleOpenPreview = () => {
-    const p = buildCloudPayload(chat, briefing, user);
-    setPayload(p);
-    setIsPreviewOpen(true);
-  };
+  // Pre-calculated cloud payload (client-redacted high-signal lines)
+  const payload = useMemo(() => buildCloudPayload(chat, briefing, user), [chat, briefing, user]);
 
-  const handleSend = async () => {
-    if (!payload || !apiKey) return;
+  const handleGenerateAI = async () => {
+    if (!payload || payload.lines.length === 0 || isSynthesizing) return;
     setIsSynthesizing(true);
+    setGeminiStatus('idle');
+
     try {
-      const res = await geminiSummarize(payload.lines, apiKey);
+      const res = await geminiSummarize(payload.lines);
       onSendCloudRequest?.(payload.lines.length);
       if (res) {
         setGeminiSummary(res);
@@ -89,47 +83,49 @@ export function ExecutiveSummary({
       setGeminiStatus('failed');
     } finally {
       setIsSynthesizing(false);
-      setIsPreviewOpen(false);
     }
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-xl bg-amber-50/40 border border-amber-200/60 space-y-3.5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border border-amber-200/70 space-y-4 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-display font-bold text-zinc-900 text-sm tracking-tight">
             Executive Summary
           </span>
           {geminiStatus === 'success' && geminiSummary ? (
             <span className="badge badge-accent text-[11px]">
               <Sparkles className="w-3 h-3 text-orange-700" />
-              Gemini, from redacted text
+              Gemini 2.5 Flash, from redacted lines
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-amber-300 text-amber-900 font-mono shadow-2xs">
-              Deterministic Heuristics Active
+              Deterministic Engine 1 Active
             </span>
           )}
         </div>
 
         {/* Action Controls */}
-        {!apiKey ? (
-          <Link
-            to="/help#gemini-setup"
-            className="text-xs text-zinc-400 hover:text-orange-600 transition-colors underline decoration-dotted"
-          >
-            Add a Gemini key for a sharper summary (optional).
-          </Link>
-        ) : geminiStatus !== 'success' && !isPreviewOpen && !isSynthesizing ? (
+        {geminiStatus !== 'success' && (
           <button
             type="button"
-            onClick={handleOpenPreview}
-            className="btn-primary py-1.5 px-3.5 text-xs font-semibold cursor-pointer"
+            onClick={handleGenerateAI}
+            disabled={isSynthesizing || payload.lines.length === 0}
+            className="btn-primary py-2 px-4 text-xs font-semibold cursor-pointer self-start sm:self-auto disabled:opacity-50"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Polish with Gemini</span>
+            {isSynthesizing ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Synthesizing...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Generate Executive Briefing</span>
+              </>
+            )}
           </button>
-        ) : null}
+        )}
       </div>
 
       {/* Summary Content Body */}
@@ -137,66 +133,50 @@ export function ExecutiveSummary({
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center gap-2.5 py-3 text-xs font-semibold text-orange-800"
+          className="flex items-center gap-2.5 py-2 text-xs font-semibold text-orange-800"
         >
           <Loader2 className="w-4 h-4 animate-spin text-orange-600" />
-          <span>Synthesizing...</span>
+          <span>Synthesizing briefing via secure server proxy...</span>
         </div>
       ) : geminiStatus === 'success' && geminiSummary ? (
         <p className="text-sm sm:text-base font-semibold text-zinc-900 leading-relaxed">
           {geminiSummary}
         </p>
       ) : (
-        <div>
+        <div className="space-y-2">
           <p className="text-sm font-semibold text-zinc-900 leading-relaxed">
             {deterministicSummary}
           </p>
           {geminiStatus === 'failed' && (
-            <p className="text-xs text-zinc-500 italic mt-2">
-              Gemini unavailable, showing on-device summary.
-            </p>
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-100/70 border border-amber-300 text-xs text-amber-900 font-medium">
+              <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>
+                Gemini synthesis is temporarily unavailable. The deterministic on-device summary above remains active.
+              </span>
+            </div>
           )}
         </div>
       )}
 
-      {/* Polish Preview Panel */}
-      {isPreviewOpen && payload && !isSynthesizing && (
-        <div className="pt-3 border-t border-zinc-200 space-y-3 text-xs">
-          <div className="flex items-start gap-2 text-zinc-700">
-            <Eye className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+      {/* Privacy Disclosure & Collapsible Payload Inspection */}
+      {geminiStatus !== 'success' && !isSynthesizing && payload.lines.length > 0 && (
+        <div className="pt-3 border-t border-amber-200/60 space-y-2.5 text-xs">
+          <div className="flex items-start gap-2 text-zinc-600">
+            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              This will send <strong className="text-zinc-900">{payload.lines.length} redacted lines</strong> to Google Gemini.{' '}
-              <strong className="text-zinc-900">{payload.redactedCount} sensitive items</strong> were redacted on this device. Banter and low-signal messages are excluded.
+              Sends up to <strong className="text-zinc-900">{payload.lines.length} high-signal lines</strong> (pre-redacted client-side for emails, phones, passwords, tokens) through our server to Google Gemini 2.5 Flash to produce a 2-sentence summary. No raw chat text is ever transmitted.
             </p>
           </div>
 
-          <details className="rounded-xl border border-zinc-200 bg-white p-2.5">
-            <summary className="font-semibold text-zinc-800 cursor-pointer select-none flex items-center gap-1">
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Show exactly what will be sent</span>
+          <details className="group rounded-xl border border-zinc-200 bg-white p-2.5 text-xs transition-colors">
+            <summary className="font-semibold text-zinc-700 cursor-pointer select-none flex items-center justify-between list-none">
+              <span>Show exactly what will be sent ({payload.lines.length} lines)</span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 group-open:rotate-180 transition-transform" />
             </summary>
             <pre className="mt-2 p-3 rounded-lg bg-zinc-950 text-zinc-200 font-mono text-[11px] max-h-48 overflow-y-auto whitespace-pre-wrap">
               {payload.lines.join('\n')}
             </pre>
           </details>
-
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setIsPreviewOpen(false)}
-              className="px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-600 hover:bg-zinc-200 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSend}
-              className="btn-primary py-1.5 px-4 text-xs font-semibold cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Send</span>
-            </button>
-          </div>
         </div>
       )}
     </div>

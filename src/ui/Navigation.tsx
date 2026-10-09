@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
 import { ShieldCheck, Home, Settings2, FileText, Lock, HelpCircle } from 'lucide-react';
-import { KeyControl } from './KeyControl';
 import { EgressBadge } from './EgressBadge';
 import { useChat } from '../context/ChatContext';
 
 export function Navigation() {
-  const { sessionStartTs, geminiLinesSent, setApiKey, chat, isStoredLocally } = useChat();
+  const { sessionStartTs, geminiLinesSent, chat, isStoredLocally } = useChat();
 
   return (
     <header className="w-full max-w-5xl mb-6">
@@ -23,9 +22,8 @@ export function Navigation() {
           )}
         </div>
 
-        {/* Top Right: Key Control and Privacy Badge */}
+        {/* Top Right: Privacy Badge */}
         <div className="flex items-center gap-2">
-          <KeyControl onKeyChange={setApiKey} />
           <EgressBadge
             sessionStartTs={sessionStartTs}
             geminiLinesSent={geminiLinesSent}

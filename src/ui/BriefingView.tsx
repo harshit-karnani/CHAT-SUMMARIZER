@@ -9,7 +9,6 @@ interface BriefingViewProps {
   chat: ParsedChat;
   briefing: Briefing;
   user: UserContext;
-  apiKey: string;
   allMessages: Message[];
   onOpenContext: (messageId: number) => void;
   onAdjustParameters: () => void;
@@ -21,7 +20,6 @@ export function BriefingView({
   chat,
   briefing,
   user,
-  apiKey,
   allMessages,
   onOpenContext,
   onAdjustParameters,
@@ -114,7 +112,6 @@ export function BriefingView({
             chat={chat}
             briefing={briefing}
             user={user}
-            apiKey={apiKey}
             onSendCloudRequest={onSendCloudRequest}
           />
         </div>

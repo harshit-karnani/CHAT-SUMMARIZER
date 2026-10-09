@@ -20,8 +20,6 @@ interface ChatContextType {
   sessionStartTs: number;
   geminiLinesSent: number;
   setGeminiLinesSent: React.Dispatch<React.SetStateAction<number>>;
-  apiKey: string;
-  setApiKey: (key: string) => void;
   loadChat: (raw: string, isDemo?: boolean) => boolean;
   runBriefing: () => Promise<boolean>;
   forgetChat: () => Promise<void>;
@@ -45,12 +43,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isStoredLocally, setIsStoredLocally] = useState<boolean>(false);
   const [sessionStartTs, setSessionStartTs] = useState<number>(() => Date.now());
   const [geminiLinesSent, setGeminiLinesSent] = useState<number>(0);
-  const [apiKey, setApiKey] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('catchup_gemini_key') || '';
-    }
-    return '';
-  });
 
   // Restore session from IndexedDB on initial load
   useEffect(() => {
@@ -223,8 +215,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         sessionStartTs,
         geminiLinesSent,
         setGeminiLinesSent,
-        apiKey,
-        setApiKey,
         loadChat,
         runBriefing,
         forgetChat,
