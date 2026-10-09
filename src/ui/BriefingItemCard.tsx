@@ -38,6 +38,19 @@ export function BriefingItemCard({
     downloadIcs(item);
   };
 
+  const getAccentBorderClass = () => {
+    switch (item.kind) {
+      case 'needs_you':
+        return 'border-l-4 border-l-rose-500';
+      case 'deadline':
+        return 'border-l-4 border-l-amber-500';
+      case 'decision':
+        return 'border-l-4 border-l-emerald-500';
+      default:
+        return 'border-l-4 border-l-zinc-400';
+    }
+  };
+
   const getKindBadge = () => {
     switch (item.kind) {
       case 'needs_you':
@@ -57,7 +70,7 @@ export function BriefingItemCard({
       case 'decision':
         return (
           <span className="badge badge-decision">
-            <CheckCircle2 className="w-3 h-3 text-sky-700" />
+            <CheckCircle2 className="w-3 h-3 text-emerald-700" />
             <span>Decision</span>
           </span>
         );
@@ -84,7 +97,7 @@ export function BriefingItemCard({
         }
       }}
       aria-label={`${item.title}. Press Enter to view message context.`}
-      className={`card p-4 sm:p-5 bg-white transition-all cursor-pointer hover:border-zinc-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-orange-500 ${
+      className={`bg-white rounded-xl border border-zinc-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-4 relative overflow-hidden transition-all cursor-pointer hover:border-zinc-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-orange-500 ${getAccentBorderClass()} ${
         isHighlighted ? 'ring-2 ring-orange-500 border-orange-400' : ''
       }`}
     >
@@ -92,22 +105,37 @@ export function BriefingItemCard({
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           {getKindBadge()}
-          <span className="msg-ref font-mono bg-zinc-100 px-1.5 py-0.5 rounded text-[11px] text-zinc-600">
+          <span className="font-mono bg-zinc-100 hover:bg-zinc-200 px-1.5 py-0.5 rounded text-[11px] text-zinc-600 border border-zinc-200/60 transition-colors">
             #msg-{primaryMsgId}
           </span>
+          {item.kind === 'needs_you' && (item.signals.includes('direct_question') || item.title.includes('?')) && (
+            <span className="inline-flex items-center text-[10px] font-mono font-semibold bg-rose-50 text-rose-800 border border-rose-200/80 px-1.5 py-0.5 rounded">
+              Direct Question
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
           {item.dueAt && (
-            <button
-              type="button"
-              onClick={handleCalendarClick}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100/80 text-amber-800 border border-amber-200 transition-colors cursor-pointer"
-              title="Export event as .ics calendar file"
-            >
-              <Calendar className="w-3 h-3 text-amber-700" />
-              <span>+ Add to Calendar</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-col items-center justify-center px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-mono text-[10px] leading-tight">
+                <span className="font-bold uppercase text-[9px] text-amber-700">
+                  {new Date(item.dueAt).toLocaleDateString('en-US', { month: 'short' })}
+                </span>
+                <span className="font-extrabold text-xs leading-none">
+                  {new Date(item.dueAt).getDate()}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCalendarClick}
+                className="btn-secondary text-[11px] py-1 px-2.5 font-semibold"
+                title="Export event as .ics calendar file"
+              >
+                <Calendar className="w-3 h-3 text-amber-600" />
+                <span>+ Add to Calendar</span>
+              </button>
+            </div>
           )}
           <span className="text-[11px] text-zinc-400 font-mono">
             {strongestMessage ? formatItemTime(strongestMessage.ts) : ''}
@@ -116,29 +144,39 @@ export function BriefingItemCard({
       </div>
 
       {/* Title */}
-      <h3 className="text-sm sm:text-base font-bold text-zinc-900 leading-snug mb-1.5 group-hover:text-orange-950">
-        {item.title}
-      </h3>
+      <div className="mb-1.5">
+        {item.kind === 'needs_you' && (item.signals.includes('direct_question') || item.title.includes('?')) ? (
+          <h3 className="text-sm sm:text-base font-sans font-bold text-zinc-900 leading-snug">
+            <code className="text-xs sm:text-sm font-mono font-semibold bg-rose-50/70 text-rose-900 border border-rose-200/70 px-1.5 py-0.5 rounded">
+              {item.title}
+            </code>
+          </h3>
+        ) : (
+          <h3 className="text-sm sm:text-base font-sans font-bold text-zinc-900 leading-snug">
+            {item.title}
+          </h3>
+        )}
+      </div>
 
       {/* Summary */}
-      <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed mb-3">
+      <p className="text-xs sm:text-sm text-zinc-600 font-sans leading-relaxed mb-3">
         {item.summary}
       </p>
 
       {/* Bottom Footer: Sender initials + Reasons */}
-      <div className="flex items-center justify-between pt-2.5 border-t border-zinc-100/80 text-xs">
+      <div className="flex items-center justify-between pt-2.5 border-t border-zinc-100 text-xs">
         <div className="flex items-center gap-2 text-zinc-500">
           <div
-            className="w-5 h-5 rounded-full bg-zinc-200 border border-zinc-300/80 text-zinc-800 text-[10px] font-bold flex items-center justify-center shrink-0"
+            className="w-5 h-5 rounded-full bg-zinc-200 border border-zinc-300/80 text-zinc-800 text-[10px] font-bold flex items-center justify-center shrink-0 font-mono"
             title={senderName}
           >
             {initials}
           </div>
-          <span className="font-medium text-zinc-700 truncate max-w-[120px] sm:max-w-none">
+          <span className="font-sans font-bold text-zinc-800 truncate max-w-[120px] sm:max-w-none">
             {senderName}
           </span>
           <span className="text-zinc-300">·</span>
-          <span className="text-[11px] text-zinc-500 truncate max-w-[200px] sm:max-w-md">
+          <span className="text-[11px] text-zinc-500 truncate max-w-[200px] sm:max-w-md font-sans">
             {item.reason}
           </span>
         </div>

@@ -156,9 +156,9 @@ export function GapStrip({
         {/* Unread Away Band Highlight */}
         <div
           style={{ left: `${sliceStartPct}%`, width: `${sliceWidthPct}%` }}
-          className="absolute top-0 bottom-2 bg-amber-50/80 border-l border-amber-300/80 rounded-r-lg pointer-events-none transition-all z-0"
+          className="absolute top-0 bottom-2 bg-amber-100/80 border-l border-amber-400 rounded-r-lg pointer-events-none transition-all z-0"
         >
-          <span className="absolute -top-4 left-1 text-[10px] font-bold text-amber-800 tracking-tight bg-amber-100 px-1.5 py-0.5 rounded shadow-2xs">
+          <span className="absolute -top-4 left-1 text-[10px] font-bold text-amber-900 tracking-tight bg-amber-200/90 px-1.5 py-0.5 rounded shadow-2xs">
             you were away
           </span>
         </div>
@@ -203,10 +203,10 @@ export function GapStrip({
                   onFocus={() => setActiveTooltipItem(item)}
                   onBlur={() => setActiveTooltipItem(null)}
                   aria-label={`${item.kind.replace('_', ' ')}: ${item.title}, ${formattedDate}`}
-                  className="w-7 h-7 -m-1 flex items-center justify-center cursor-pointer group focus-visible:outline-2 focus-visible:outline-orange-500 rounded-full"
+                  className="w-11 h-11 -m-4 flex items-center justify-center cursor-pointer group focus-visible:outline-2 focus-visible:outline-orange-500 rounded-full"
                 >
                   <span
-                    className={`w-3 h-3 rounded-full border-2 transition-transform duration-150 group-hover:scale-125 shadow-xs ${getPinColor(
+                    className={`w-3.5 h-3.5 rounded-full border-2 transition-transform duration-150 group-hover:scale-125 shadow-xs ${getPinColor(
                       item.kind
                     )}`}
                   />

@@ -3,6 +3,7 @@ import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, V
 import type { Briefing, Message, ParsedChat, UserContext } from '../types';
 import { BriefingItemCard } from './BriefingItemCard';
 import { ExecutiveSummary } from './ExecutiveSummary';
+import { EmptyState } from './EmptyState';
 
 interface BriefingViewProps {
   chat: ParsedChat;
@@ -56,12 +57,12 @@ export function BriefingView({
       <section className="card p-6 bg-white shadow-xs border border-zinc-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-100">
           <div>
-            <span className="text-[11px] uppercase tracking-wider font-bold text-orange-600">
+            <span className="text-[11px] uppercase tracking-wider font-bold text-orange-600 font-display">
               Executive Briefing
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight font-display">
               While you were out
-            </h2>
+            </h1>
           </div>
           <button
             type="button"
@@ -118,6 +119,11 @@ export function BriefingView({
           />
         </div>
       </section>
+
+      {/* Empty State when no items need action */}
+      {briefing.items.length === 0 && (
+        <EmptyState onAdjustTime={onAdjustParameters} />
+      )}
 
       {/* 2. Needs You Section */}
       {needsYouItems.length > 0 && (
