@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, and deterministic triage heuristics (`src/core/triage.ts`) implementing signals (mention +40, direct_question +25, open_question +10, deadline +25/+35, urgent +15, decision +20) capped at 100 with human-readable reasons.
-- **What works**: Instant deterministic scoring, system and user.me filtering, follow-up detection within 10 min window, deadline integration.
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, and briefing builder (`src/core/briefing.ts`) with unread slice filtering, candidate selection (score >= 25), 15-minute clustering, deterministic templating, and prioritized ordering.
+- **What works**: Unread slice slicing, multi-message clustering, grounded citation linking to original message IDs, priority sorting (needs_you -> deadline -> decision -> fyi).
 - **What is broken**: Nothing broken.
-- **Next step**: Step 7 — Briefing builder (`src/core/briefing.ts`).
+- **Next step**: Step 8 — Calendar export (`src/core/ics.ts`).
 
 ---
 
@@ -44,6 +44,12 @@
 - **Prompt/Instruction Summary**: `src/core/triage.ts` exporting `triage(messages, user)`. System messages & user.me score 0. Weighted signals: mention (+40), direct_question (+25), open_question (+10), deadline (+25, +10 within 48h), urgent (+15), decision (+20). Cap score at 100. Human-readable reasons for each signal.
 - **Files Modified**: `src/core/triage.ts`, `prompt.md`.
 - **Key Decisions**: Computed contextual direct question detection combining verbs/question marks with alias or preceding user message within 10 minutes.
+- **Issues Resolved**: None.
+
+### Step 7: Briefing Builder [2026-10-09T14:06:30+05:30]
+- **Prompt/Instruction Summary**: `src/core/briefing.ts` exporting `buildBriefing(chat, user)`. Unread slice (ts > lastReadAt), candidates (score >= 25), 15m consecutive clustering, classification (needs_you, deadline, decision, fyi), deterministic grounded summaries, sorting by priority & score.
+- **Files Modified**: `src/core/briefing.ts`, `prompt.md`.
+- **Key Decisions**: Clustered candidates within 15-minute bursts to prevent duplicate action items. Guaranteed grounded citation by attaching `sourceMessageIds`.
 - **Issues Resolved**: None.
 
 ---
