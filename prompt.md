@@ -1,10 +1,13 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, and bundled demo chat dataset (`scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`).
-- **What works**: 420-message realistic synthetic dataset with seeded bursts, 5 fictional participants, planted asks (4), deadlines (4), decisions (3), and zero-network raw import via Vite `?raw`.
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, bundled demo chat dataset, placeholder shell (`src/App.tsx`), and automated smoke test script (`scripts/smoke.ts`, `npm run smoke`).
+- **What works**:
+  - `npm run build` succeeds cleanly with self-hosted Manrope variable fonts and zero external network calls.
+  - `npm run smoke` validates 420 messages parsed, all planted categories detected (needs_you: 4, deadline: 4, decision: 3), and zero hallucinated message IDs.
+  - Shell card displays "Engine 1 ready: 420 messages parsed, 11 items found".
 - **What is broken**: Nothing broken.
-- **Next step**: Step 10 — Placeholder shell and smoke script (`src/App.tsx`, `scripts/smoke.ts`, `package.json`).
+- **Next step**: CHECKPOINT verification, local preview test, and deployment to Vercel production.
 
 ---
 
@@ -62,6 +65,12 @@
 - **Prompt/Instruction Summary**: `scripts/generate-demo.mjs` deterministic generator producing `src/data/demo_chat.txt` (420 messages, 5 participants, realistic timing, media omitted, system join, asks, deadlines, decisions, open questions). Expose via `src/data/demo.ts` with `?raw` import and `DEMO_USER` / `demoLastReadAt()`.
 - **Files Modified**: `scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/data/demo.ts`, `prompt.md`.
 - **Key Decisions**: Used zero-network raw bundler import (`?raw`) so loading demo never triggers fetch. Planted direct asks, deadlines, and decisions verified by triage heuristics.
+- **Issues Resolved**: None.
+
+### Step 10: Placeholder Shell & Smoke Script [2026-10-09T14:13:40+05:30]
+- **Prompt/Instruction Summary**: `src/App.tsx` minimal shell card in executive style showing "Engine 1 ready: {N} messages parsed, {M} items found" on initial load. Added `npm run smoke` in `package.json` and `scripts/smoke.ts` verifying parsing, briefing counts per kind, and planted asks/deadlines/decisions.
+- **Files Modified**: `src/App.tsx`, `scripts/smoke.ts`, `package.json`, `package-lock.json`, `prompt.md`.
+- **Key Decisions**: Built clean zero-egress status card presenting live briefing numbers. Added automated integrity check verifying all item message IDs exist in original chat without hallucinations.
 - **Issues Resolved**: None.
 
 ---
