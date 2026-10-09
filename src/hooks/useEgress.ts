@@ -4,6 +4,7 @@ export interface EgressCall {
   url: string;
   method: string;
   bodyBytes: number;
+  host?: string;
   ts: number;
 }
 

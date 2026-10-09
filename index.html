@@ -10,10 +10,19 @@
       (function() {
         window.__egress = window.__egress || [];
         function logEgress(url, method, bodyBytes) {
+          var urlStr = String(url || '');
+          var host = '';
+          try {
+            var parsed = new URL(urlStr, window.location.href);
+            host = parsed.hostname;
+          } catch (e) {
+            host = '';
+          }
           var entry = {
-            url: String(url || ''),
+            url: urlStr,
             method: String(method || 'GET').toUpperCase(),
             bodyBytes: Number(bodyBytes || 0),
+            host: host,
             ts: Date.now()
           };
           window.__egress.push(entry);

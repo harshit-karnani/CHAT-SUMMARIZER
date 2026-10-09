@@ -11,6 +11,7 @@ import { EmptyState } from './ui/EmptyState';
 import { BriefingView } from './ui/BriefingView';
 import { GapStrip } from './ui/GapStrip';
 import { ContextDrawer } from './ui/ContextDrawer';
+import { KeyControl } from './ui/KeyControl';
 import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
@@ -24,6 +25,11 @@ export default function App() {
   const [briefing, setBriefing] = useState<Briefing | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isConfiguring, setIsConfiguring] = useState<boolean>(true);
+
+  // Gemini Key and Session Privacy Tracking
+  const [apiKey, setApiKey] = useState<string>('');
+  const [sessionStartTs, setSessionStartTs] = useState<number>(() => Date.now());
+  const [geminiLinesSent, setGeminiLinesSent] = useState<number>(0);
 
   // Lineage Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -59,6 +65,8 @@ export default function App() {
       setBriefing(null);
       setIsConfiguring(true);
       setStage('idle');
+      setSessionStartTs(Date.now());
+      setGeminiLinesSent(0);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid chat export file.';
       setErrorMsg(msg);
@@ -104,6 +112,8 @@ export default function App() {
     setErrorMsg(null);
     setIsConfiguring(true);
     setIsDrawerOpen(false);
+    setSessionStartTs(Date.now());
+    setGeminiLinesSent(0);
   };
 
   const handleOpenContext = (targetMsgId: number, sourceIds: number[] = []) => {
@@ -147,11 +157,14 @@ export default function App() {
         Skip to main content
       </a>
 
-      {/* Zero Egress Badge */}
-      <EgressBadge />
+      {/* Zero Egress & Privacy Badge */}
+      <EgressBadge
+        sessionStartTs={sessionStartTs}
+        geminiLinesSent={geminiLinesSent}
+      />
 
       {/* Main App Header */}
-      <header className="mb-6 text-center max-w-lg">
+      <header className="mb-6 text-center max-w-lg flex flex-col items-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold mb-2.5">
           <ShieldCheck className="w-3.5 h-3.5 text-orange-800" />
           <span>Zero-Egress · Client-Only Intelligence</span>
@@ -162,6 +175,9 @@ export default function App() {
         <p className="mt-1 text-xs text-zinc-500">
           Executive briefings for WhatsApp chats. 100% deterministic, in-browser heuristics.
         </p>
+        <div className="mt-3">
+          <KeyControl onKeyChange={setApiKey} />
+        </div>
       </header>
 
       {/* Main Content Area */}
@@ -257,13 +273,19 @@ export default function App() {
 
                   {/* Step 3: Briefing View */}
                   <BriefingView
+                    chat={chat}
                     briefing={briefing}
+                    user={userContext}
+                    apiKey={apiKey}
                     allMessages={chat.messages}
                     onOpenContext={(msgId) => {
                       const item = briefing.items.find((i) => i.sourceMessageIds.includes(msgId));
                       handleOpenContext(msgId, item ? item.sourceMessageIds : [msgId]);
                     }}
                     onAdjustParameters={() => setIsConfiguring(true)}
+                    onSendCloudRequest={(linesCount) => {
+                      setGeminiLinesSent((prev) => prev + linesCount);
+                    }}
                     highlightedItemId={highlightedItemId}
                   />
                 </div>

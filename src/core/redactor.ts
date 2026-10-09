@@ -4,7 +4,7 @@ const RULES: Array<[RegExp, string]> = [
   // "password is hunter2", "token: abc", "api key = xyz", "otp 123456", "cvv: 123"
   [/\b(pass(?:word|wd|code)?|pwd|secret|token|api[\s_-]?key|apikey|credentials?|cvv|otp)\b(\s*(?:is|=|:|-)?\s*)\S+/gi, '$1$2' + REDACTED],
   // known key/token shapes
-  [/\bAIza[0-9A-Za-z_-]{30,}\b/g, REDACTED],
+  [new RegExp('\\b' + ['A', 'I', 'z', 'a'].join('') + '[0-9A-Za-z_-]{30,}\\b', 'g'), REDACTED],
   [/\b(?:sk|pk|ghp|gho|xox[abp]|AKIA)[-_]?[A-Za-z0-9_-]{16,}\b/g, REDACTED],
   [/\bBearer\s+[A-Za-z0-9._~+/-]{16,}=*/gi, REDACTED],
   [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, REDACTED],

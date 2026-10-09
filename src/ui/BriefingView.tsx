@@ -1,21 +1,30 @@
 import { useState } from 'react';
 import { ChevronDown, SlidersHorizontal, UserCheck, Clock, CheckCircle2, Info, VolumeX } from 'lucide-react';
-import type { Briefing, Message } from '../types';
+import type { Briefing, Message, ParsedChat, UserContext } from '../types';
 import { BriefingItemCard } from './BriefingItemCard';
+import { ExecutiveSummary } from './ExecutiveSummary';
 
 interface BriefingViewProps {
+  chat: ParsedChat;
   briefing: Briefing;
+  user: UserContext;
+  apiKey: string;
   allMessages: Message[];
   onOpenContext: (messageId: number) => void;
   onAdjustParameters: () => void;
+  onSendCloudRequest?: (linesCount: number) => void;
   highlightedItemId?: string | null;
 }
 
 export function BriefingView({
+  chat,
   briefing,
+  user,
+  apiKey,
   allMessages,
   onOpenContext,
   onAdjustParameters,
+  onSendCloudRequest,
   highlightedItemId,
 }: BriefingViewProps) {
   const [showNoise, setShowNoise] = useState(false);
@@ -96,6 +105,17 @@ export function BriefingView({
           <span className="text-zinc-400 text-xs ml-auto">
             {briefing.noiseCount} noise filtered
           </span>
+        </div>
+
+        {/* Executive Summary Subsection */}
+        <div className="mt-4 pt-4 border-t border-zinc-100">
+          <ExecutiveSummary
+            chat={chat}
+            briefing={briefing}
+            user={user}
+            apiKey={apiKey}
+            onSendCloudRequest={onSendCloudRequest}
+          />
         </div>
       </section>
 
