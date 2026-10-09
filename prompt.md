@@ -1,14 +1,13 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view: executive header card with reading-time speedup stats, 4 scannable sections for Needs you / Deadlines / Decisions / FYI, collapsible Noise drawer with message inspections, monospace #msg-{id} citations, sender initials, and inline Add to Calendar RFC 5545 ICS download buttons).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap) + Step 2 (Ingestion & setup) + Step 3 (Briefing view) + Step 4 (Gap Strip density minimap: 80 normalized flexbox buckets, zinc-300 read vs zinc-800 unread, amber-50 unread band with "you were away" label, keyboard-accessible 44px hit-area pins with tooltips, day ticks, and interactive card scroll + flash ring).
 - **What works**:
-  - Full executive briefing rendering with 4-tier categorization and scannable visual hierarchy.
-  - Word count reading time estimate ("{N} messages, about {M} min to read, here is the 40-second version").
-  - RFC 5545 .ics downloads on deadline cards.
+  - Horizontal message density distribution with visual distinction between read context and unread slice.
+  - Interactive action pins with hover/focus tooltips and smooth scroll-to-card navigation.
   - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 4 — Gap Strip density minimap (`src/ui/GapStrip.tsx`).
+- **Next step**: Chunk 2 Step 5 — Context lineage drawer (`src/ui/ContextDrawer.tsx`).
 
 ---
 
@@ -104,6 +103,12 @@
 - **Prompt/Instruction Summary**: Build BriefingView and BriefingItemCard components. Executive summary card with word-count reading-time formula, sections for Needs you, Deadlines, Decisions, and FYI. Collapsible Noise section. Each card includes kind badge, title, summary, reasons, monospace #msg tag, sender initials, time, and "+ Add to Calendar" RFC 5545 button.
 - **Files Modified**: `src/ui/BriefingItemCard.tsx`, `src/ui/BriefingView.tsx`, `src/App.tsx`, `prompt.md`.
 - **Key Decisions**: Scannable, flat card hierarchy with explicit visual markers and semantic badges. Integrated calendar downloads cleanly per item without external packages.
+- **Issues Resolved**: None.
+
+### Step 15: Density Gap Strip Minimap (Chunk 2 Step 4) [2026-10-09T14:38:00+05:30]
+- **Prompt/Instruction Summary**: Build GapStrip component with horizontal 80-bucket density minimap, zinc-300 read vs zinc-800 unread bars, amber-50 "you were away" highlight band, keyboard-accessible action pins with 44px hit areas and tooltips, screen-reader alternative list, day tick markers, and smooth card scrolling.
+- **Files Modified**: `src/ui/GapStrip.tsx`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Implemented ARIA group semantics with screen-reader accessible alternative list. Synchronized card highlighting with prefers-reduced-motion checks.
 - **Issues Resolved**: None.
 
 ---
