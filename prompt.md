@@ -1,10 +1,10 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, and relative date resolution engine (`src/core/dates.ts`) using chrono-node with forwardDate, bare EOD resolution (18:00 same day), ordinal resolution ("on 14th"), and suppression of non-date words ("may", "march").
-- **What works**: All required relative phrases resolve deterministically; parser & date resolution tested and building.
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, and deterministic triage heuristics (`src/core/triage.ts`) implementing signals (mention +40, direct_question +25, open_question +10, deadline +25/+35, urgent +15, decision +20) capped at 100 with human-readable reasons.
+- **What works**: Instant deterministic scoring, system and user.me filtering, follow-up detection within 10 min window, deadline integration.
 - **What is broken**: Nothing broken.
-- **Next step**: Step 6 — Triage heuristics (`src/core/triage.ts`).
+- **Next step**: Step 7 — Briefing builder (`src/core/briefing.ts`).
 
 ---
 
@@ -39,6 +39,12 @@
 - **Files Modified**: `src/core/dates.ts`, `prompt.md`.
 - **Key Decisions**: Added ordinal pattern recognizer for "on 14th" and bare "EOD" adjuster (18:00 same day / contextual day). Filtered matches lacking day or time signals.
 - **Issues Resolved**: Handled edge case where chrono does not recognize bare "EOD" and bare ordinals without month.
+
+### Step 6: Triage Heuristics [2026-10-09T14:05:30+05:30]
+- **Prompt/Instruction Summary**: `src/core/triage.ts` exporting `triage(messages, user)`. System messages & user.me score 0. Weighted signals: mention (+40), direct_question (+25), open_question (+10), deadline (+25, +10 within 48h), urgent (+15), decision (+20). Cap score at 100. Human-readable reasons for each signal.
+- **Files Modified**: `src/core/triage.ts`, `prompt.md`.
+- **Key Decisions**: Computed contextual direct question detection combining verbs/question marks with alias or preceding user message within 10 minutes.
+- **Issues Resolved**: None.
 
 ---
 
