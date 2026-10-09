@@ -1,12 +1,15 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (inline zero-egress trap in `index.html` wrapping fetch/XHR/sendBeacon, `useEgress()` hook, and `EgressBadge` component displaying 0 Network Calls with interactive audit popover and Airplane mode indicator).
+- **What is built**: Full Chunk 1 core engines + Chunk 2 Step 1 (Zero-egress trap & network badge) + Chunk 2 Step 2 (Ingestion and setup view: drag & drop dropzone, demo loader button with offline bundled import, collapsible WhatsApp export instructions, sender radio group, chip-based alias manager, dual synchronized time controls with presets, staged progress pipeline indicator, and zero-result empty state).
 - **What works**:
-  - Zero network egress verified and trapped; badge shows green "0 Network Calls | 100% On-Device" and popover opens with empty-state confirmation.
+  - Drag and drop .txt/.zip extraction and instant demo loading.
+  - Interactive participant selection and chip-based alias management.
+  - Live "You missed {N} messages" human readout updating on time changes.
+  - Real staged progress pipeline (< 600ms total visible transition).
   - `npm run build`, `npm run smoke`, and `npm test` all passing.
 - **What is broken**: Nothing broken.
-- **Next step**: Chunk 2 Step 2 — Ingestion and setup view (drag & drop dropzone, demo loader, sender radio group, alias chips, time range slider with presets, and staged progress runner).
+- **Next step**: Chunk 2 Step 3 — Briefing view (executive header card, categorized sections for Needs you / Deadlines / Decisions / FYI, collapsible Noise section, monospace #msg tags, and inline Add to Calendar ICS buttons).
 
 ---
 
@@ -90,6 +93,12 @@
 - **Prompt/Instruction Summary**: Inline zero-egress script in `index.html` wrapping `window.fetch`, `XMLHttpRequest.prototype.open/send`, and `navigator.sendBeacon` to log to `window.__egress` without blocking. Add `useEgress()` hook and fixed top badge (`EgressBadge.tsx`) showing "0 Network Calls | 100% On-Device" in green, turns red on call, with interactive "Network log" popover and "Airplane mode ready" indicator.
 - **Files Modified**: `index.html`, `src/hooks/useEgress.ts`, `src/ui/EgressBadge.tsx`, `src/App.tsx`, `prompt.md`.
 - **Key Decisions**: Ran egress interceptor before ES modules load. Dispatched custom `egress-call` event to allow instant reactive updates in React without polling.
+- **Issues Resolved**: None.
+
+### Step 13: Ingestion & Setup View (Chunk 2 Step 2) [2026-10-09T14:32:00+05:30]
+- **Prompt/Instruction Summary**: Build landing card with drag-and-drop dropzone supporting .txt/.zip exports, offline bundled demo loader button with Zap icon, collapsible WhatsApp export guide for Android and iOS, setup card with accessible sender radio group, alias chip manager, time range slider synchronized with datetime input and 3 presets, live missed messages readout, and staged pipeline progress (< 600ms).
+- **Files Modified**: `src/ui/Dropzone.tsx`, `src/ui/ExportInstructions.tsx`, `src/ui/SetupCard.tsx`, `src/ui/StagedProgress.tsx`, `src/ui/EmptyState.tsx`, `src/App.tsx`, `prompt.md`.
+- **Key Decisions**: Integrated staged animation loop reflecting pipeline stages (reading -> mentions -> dates -> building). Handled verbatimModuleSyntax type imports for event listeners.
 - **Issues Resolved**: None.
 
 ---

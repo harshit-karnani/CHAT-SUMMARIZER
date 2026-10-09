@@ -1,104 +1,176 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { parseChat } from './core/parser';
 import { buildBriefing } from './core/briefing';
-import { demoChat, DEMO_USER } from './data/demo';
-import { ShieldCheck, Sparkles, Clock, CheckCircle2, UserCheck } from 'lucide-react';
+import { demoChat, DEMO_USER, demoLastReadAt } from './data/demo';
+import type { ParsedChat, Briefing, UserContext } from './types';
 import { EgressBadge } from './ui/EgressBadge';
+import { Dropzone } from './ui/Dropzone';
+import { SetupCard } from './ui/SetupCard';
+import { StagedProgress, type PipelineStage } from './ui/StagedProgress';
+import { EmptyState } from './ui/EmptyState';
+import { ShieldCheck } from 'lucide-react';
 
 export default function App() {
-  const { parsed, briefing } = useMemo(() => {
-    try {
-      const p = parseChat(demoChat);
-      const b = buildBriefing(p, DEMO_USER);
-      return { parsed: p, briefing: b };
-    } catch (err) {
-      console.error('Error during demo initialization:', err);
-      return { parsed: null, briefing: null };
-    }
-  }, []);
+  const [chat, setChat] = useState<ParsedChat | null>(null);
+  const [userContext, setUserContext] = useState<UserContext>({
+    me: 'Kabir',
+    aliases: ['Kabir', 'kabi'],
+    lastReadAt: demoLastReadAt(),
+  });
+  const [stage, setStage] = useState<PipelineStage>('idle');
+  const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isConfiguring, setIsConfiguring] = useState<boolean>(true);
 
-  const messageCount = parsed?.messages.filter((m) => !m.isSystem).length ?? 0;
-  const itemCount = briefing?.items.length ?? 0;
+  const handleLoadChat = (rawText: string, isDemo = false) => {
+    try {
+      setErrorMsg(null);
+      const parsed = parseChat(rawText);
+      setChat(parsed);
+
+      if (isDemo) {
+        setUserContext({
+          me: DEMO_USER.me,
+          aliases: [...DEMO_USER.aliases],
+          lastReadAt: demoLastReadAt(),
+        });
+      } else {
+        const defaultSender = parsed.senders[0] || 'Me';
+        const defaultFirstName = defaultSender.split(' ')[0];
+        const index60 = Math.floor(parsed.messages.length * 0.6);
+        const defaultLastRead = parsed.messages[index60]?.ts ?? Date.now();
+
+        setUserContext({
+          me: defaultSender,
+          aliases: [defaultSender, defaultFirstName].filter(Boolean),
+          lastReadAt: defaultLastRead,
+        });
+      }
+
+      setBriefing(null);
+      setIsConfiguring(true);
+      setStage('idle');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid chat export file.';
+      setErrorMsg(msg);
+      setChat(null);
+    }
+  };
+
+  const handleLoadDemo = () => {
+    handleLoadChat(demoChat, true);
+  };
+
+  const handleRunBriefing = () => {
+    if (!chat) return;
+
+    setStage('reading');
+    setTimeout(() => {
+      setStage('mentions');
+      setTimeout(() => {
+        setStage('dates');
+        setTimeout(() => {
+          setStage('building');
+          setTimeout(() => {
+            try {
+              const b = buildBriefing(chat, userContext);
+              setBriefing(b);
+              setIsConfiguring(false);
+              setStage('done');
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : 'Briefing generation failed.';
+              setErrorMsg(msg);
+              setStage('idle');
+            }
+          }, 110);
+        }, 110);
+      }, 110);
+    }, 110);
+  };
+
+  const handleResetChat = () => {
+    setChat(null);
+    setBriefing(null);
+    setStage('idle');
+    setErrorMsg(null);
+    setIsConfiguring(true);
+  };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center justify-center p-6 antialiased relative">
+    <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center py-10 px-4 sm:px-6 antialiased relative">
       <EgressBadge />
-      {/* Header */}
-      <header className="mb-8 text-center max-w-lg">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold mb-3">
+
+      {/* Main App Header */}
+      <header className="mb-6 text-center max-w-lg">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold mb-2.5">
           <ShieldCheck className="w-3.5 h-3.5 text-orange-800" />
           <span>Zero-Egress · Client-Only Intelligence</span>
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
           CatchUp Zero
         </h1>
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-1 text-xs text-zinc-500">
           Executive briefings for WhatsApp chats. 100% deterministic, in-browser heuristics.
         </p>
       </header>
 
-      {/* Main Status Card */}
-      <main className="w-full max-w-md">
-        <div className="card p-6 bg-white shadow-xs">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wider font-bold text-zinc-400">
-                Core Engine Status
+      {/* Main Content Area */}
+      <main className="w-full max-w-4xl flex flex-col items-center">
+        {/* 1. File Upload Dropzone (if no chat loaded) */}
+        {!chat && (
+          <Dropzone
+            onLoadChat={(txt) => handleLoadChat(txt, false)}
+            onLoadDemo={handleLoadDemo}
+            errorMessage={errorMsg}
+          />
+        )}
+
+        {/* 2. Setup Card (when chat is loaded and configuring) */}
+        {chat && isConfiguring && stage === 'idle' && (
+          <SetupCard
+            chat={chat}
+            userContext={userContext}
+            onChangeUser={setUserContext}
+            onGenerate={handleRunBriefing}
+            onResetChat={handleResetChat}
+            isProcessing={stage !== 'idle'}
+          />
+        )}
+
+        {/* 3. Staged Pipeline Loader */}
+        <StagedProgress currentStage={stage} />
+
+        {/* 4. Briefing Output or Empty State (when generated) */}
+        {chat && !isConfiguring && stage === 'done' && (
+          <>
+            {briefing && briefing.items.length === 0 ? (
+              <EmptyState onAdjustTime={() => setIsConfiguring(true)} />
+            ) : (
+              <div className="w-full card p-6 bg-white shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-100 mb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-zinc-900">
+                      Briefing Generated
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      {briefing?.items.length} items found across {briefing?.missedCount} unread messages
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfiguring(true)}
+                    className="text-xs text-zinc-600 hover:text-zinc-900 font-semibold px-3 py-1.5 rounded-lg border border-zinc-200 hover:bg-zinc-50 cursor-pointer"
+                  >
+                    Adjust parameters
+                  </button>
+                </div>
+                <div className="text-xs text-zinc-600">
+                  Ready for full briefing view.
+                </div>
               </div>
-              <h2 className="text-lg font-bold text-zinc-900">
-                Engine 1 ready: {messageCount} messages parsed, {itemCount} items found
-              </h2>
-            </div>
-          </div>
-
-          <p className="text-xs text-zinc-500 mb-6 leading-relaxed">
-            The deterministic briefing engine parsed the bundled demo export and clustered actionable items for user{' '}
-            <span className="font-semibold text-zinc-800">@{DEMO_USER.me}</span> with zero server egress.
-          </p>
-
-          {/* Planted Categories Verification */}
-          {briefing && (
-            <div className="space-y-2.5 pt-4 border-t border-zinc-100">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-zinc-600 font-medium">
-                  <UserCheck className="w-4 h-4 text-red-500" />
-                  Direct Asks (Needs You)
-                </span>
-                <span className="badge badge-needs-you">
-                  {briefing.counts.needs_you} items
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-zinc-600 font-medium">
-                  <Clock className="w-4 h-4 text-amber-500" />
-                  Time-Sensitive Deadlines
-                </span>
-                <span className="badge badge-deadline">
-                  {briefing.counts.deadline} items
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-zinc-600 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-sky-600" />
-                  Locked Group Decisions
-                </span>
-                <span className="badge badge-decision">
-                  {briefing.counts.decision} items
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-[11px] text-zinc-400">
-            <span>Format: {parsed?.format.toUpperCase()} ({parsed?.dateOrder.toUpperCase()})</span>
-            <span className="font-mono">connect-src 'none'</span>
-          </div>
-        </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   );
