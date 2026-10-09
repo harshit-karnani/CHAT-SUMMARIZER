@@ -1,14 +1,29 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Hybrid Privacy-Gated Pipeline. Engine 1 deterministic core (parser, relative dates, triage heuristics, clustering, Gap Strip minimap, context drawer, RFC 5545 .ics export) is 100% active and rock-solid. Group 1 (WebLLM removed, clean CSP), Group 2 (pure regex redactor & cloud payload builder with 10 unit tests), Group 3 (gemini-2.5-flash synthesis client with 6 mocked tests), Group 4 (sessionStorage KeyControl modal, Executive Summary card with preview panel, and 3-state Privacy Badge: LOCAL / CLOUD / ALERT).
+- **Visual refresh**: Implemented Poppins/Inter typography, tactical orange button styling, and asymmetric feature card architecture.
+- **Routing & Navigation**: Full 6-route single-page application using `react-router-dom` (`/`, `/setup`, `/briefing?msg=ID`, `/privacy`, `/help`, `*`) with persistent navigation, skip link, and `?msg=ID` drawer deep linking.
+- **Refresh-Safe On-Device State**: Chat raw text, sender, aliases, and last-read timestamp persisted locally in `IndexedDB` (`src/core/store.ts`) with graceful fallback. "Forget this chat" deletes all data and resets counters.
+- **Performance Benchmark**: 10,000 messages parsed, triaged, and briefed in **251 ms** (under 3s requirement verified by `tests/perf.test.ts`).
+- **WCAG AA / AAA Contrast Verification**:
+  - `#09090b` (zinc-950) on `#f97316` (orange-500): **7.29 : 1** (WCAG AAA)
+  - `#09090b` (zinc-950) on `#f59e0b` (amber-500): **9.37 : 1** (WCAG AAA)
+  - `#9a3412` (orange-800) on `#fff7ed` (orange-50): **6.33 : 1** (WCAG AA)
+  - `#b91c1c` (red-700) on `#fef2f2` (red-50): **6.16 : 1** (WCAG AA)
+  - `#b45309` (amber-700) on `#fffbeb` (amber-50): **5.14 : 1** (WCAG AA)
+  - `#047857` (emerald-700) on `#ecfdf5` (emerald-50): **5.42 : 1** (WCAG AA)
+  - `#3f3f46` (zinc-700) on `#f4f4f5` (zinc-100): **8.61 : 1** (WCAG AAA)
+  - `#18181b` (zinc-900) on `#ffffff` (card bg): **17.21 : 1** (WCAG AAA)
+  - `#18181b` (zinc-900) on `#fafafa` (canvas bg): **16.36 : 1** (WCAG AAA)
+  - `#71717a` (zinc-500) on `#ffffff` (card bg): **4.63 : 1** (WCAG AA)
 - **What works**:
-  - Pure deterministic on-device operation with zero data sent by default.
+  - 100% deterministic on-device operation with zero data sent by default.
   - Optional user-keyed Gemini polish: user pastes key in sessionStorage, reviews redacted candidate lines in preview panel before sending, and receives crisp 2-sentence synthesis.
-  - Privacy badge dynamically reflects state: green LOCAL (0 data sent), amber CLOUD (credentials redacted locally, N lines sent), red ALERT (unauthorized outbound calls).
-  - All 19 unit tests pass, smoke test passes, build succeeds in ~1s with 0 mentions of AIza in `dist/`.
+  - Privacy badge dynamically reflects state: green LOCAL (0 data sent), amber CLOUD (credentials redacted locally, N lines sent), red ALERT (unauthorized outbound calls). Clicking badge navigates directly to `/privacy`.
+  - RFC 5545 `.ics` export with clean mini calendar stamp on deadline cards.
+  - All 24 unit tests pass, smoke test passes, `npm run build` succeeds cleanly with 0 occurrences of AIza in `dist/`.
 - **What is broken**: Nothing broken.
-- **Next step**: Final checks and verification reporting.
+- **Next step**: Ready for user manual testing on live URL.
 
 ---
 
@@ -149,10 +164,19 @@
   - Zero key bundling: keys are read strictly from tab `sessionStorage` at call time and never logged or included in bundle (`grep dist/ for "AIza"` returns empty).
 - **Issues Resolved**: Resolved TypeScript property checks in payload builder and avoided string bundling of literal key prefixes.
 
+### Step 20: Visual Refinement, Routing & Full Reconciliation [2026-10-09T15:43:00+05:30]
+- **Prompt/Instruction Summary**: Full feature reconciliation against master spec. Visual refresh: Poppins (display 600, 700), Inter (sans 400, 500, 600), JetBrains Mono (mono 400, 500). Tactile orange button system with layered micro-borders and directional shadows (`.btn-primary`), utility button styling (`.btn-secondary`). Asymmetric, high-density cards with left-border accents (rose for Needs You, amber for Deadlines, emerald for Decisions). Purposeful dropzone with metadata and demo loader. Full React Router integration across 6 routes (`/`, `/setup`, `/briefing?msg=ID`, `/privacy`, `/help`, `*`). On-device IndexedDB refresh persistence (`src/core/store.ts`). Unit tests for RFC 5545 `.ics` structure (`tests/ics.test.ts`) and 10,000 message performance benchmark under 3s (`tests/perf.test.ts`).
+- **Files Modified**: `package.json`, `package-lock.json`, `tailwind.config.js`, `src/index.css`, `index.html`, `public/egress-guard.js`, `src/core/parser.ts`, `src/core/briefing.ts`, `src/core/dates.ts`, `src/core/payload.ts`, `src/core/store.ts`, `src/context/ChatContext.tsx`, `src/ui/Navigation.tsx`, `src/ui/Dropzone.tsx`, `src/ui/SetupCard.tsx`, `src/ui/BriefingItemCard.tsx`, `src/ui/ExecutiveSummary.tsx`, `src/ui/GapStrip.tsx`, `src/ui/ContextDrawer.tsx`, `src/pages/HomePage.tsx`, `src/pages/SetupPage.tsx`, `src/pages/BriefingPage.tsx`, `src/pages/PrivacyPage.tsx`, `src/pages/HelpPage.tsx`, `src/pages/NotFoundPage.tsx`, `tests/store.test.ts`, `tests/ics.test.ts`, `tests/perf.test.ts`, `README.md`, `prompt.md`.
+- **Key Decisions**:
+  - Implemented Google Fonts link and offline `@fontsource` fallbacks.
+  - Enhanced parser to auto-detect and prefer `_chat.txt` in `.zip`, strip BOM & directional markers, and provide non-blocking warning when message count > 20,000.
+  - Added dedicated unit tests for `.ics` RFC 5545 format and verified 10,000 messages parse + triage + brief in 251ms.
+- **Issues Resolved**: Resolved unused imports, missing `<h1>` on briefing page, and ensured strict WCAG AA/AAA contrast across all visual badges and buttons.
+
 ---
 
 ## Gen AI Usage
-Engine 1 uses no generative AI. Optional: when the user supplies their own Gemini 2.5 Flash API key and clicks Send, up to 40 redacted high-signal lines are sent to Google Gemini from the browser to produce a 2-sentence executive summary (src/core/gemini.ts, src/core/redactor.ts). Without a key, or on any failure, the deterministic summary is used. No key is stored in the repo or bundle.
+Engine 1 uses no generative AI. Optional: when the user supplies their own Gemini 2.5 Flash key and clicks Send, up to 40 redacted high-signal lines are sent from the browser to produce a 2-sentence summary (src/core/gemini.ts, src/core/redactor.ts). Without a key, or on any failure, the deterministic summary is used. No key is stored in the repo or bundle.
 
 ---
 

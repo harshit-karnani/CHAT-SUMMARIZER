@@ -27,11 +27,12 @@ Your WhatsApp conversations contain sensitive personal and business communicatio
 ### 1. Default Mode: 100% On-Device & Zero Network Calls
 - By default, all chat parsing, relative date extraction, triage scoring, clustering, and calendar generation run completely in your browser tab.
 - Nothing leaves your computer. The app functions seamlessly with airplane mode enabled.
+- **Refresh Persistence via IndexedDB**: Your parsed chat and session parameters are saved only in this browser's `IndexedDB` on-device so page refreshes don't lose your place. Nothing is ever uploaded to a server or cloud. You can click **"Forget this chat"** at any time to permanently wipe the local database.
 - A live Privacy Badge at the top monitors network traffic and displays: `100% Local Heuristics Active (0 Data Sent)`.
 
 ### 2. Optional Hybrid Synthesis (User-Keyed Google Gemini)
 Users can optionally provide their own Google Gemini API key to generate a polished 2-sentence executive summary:
-- **Stored in sessionStorage Only**: Your API key exists only in your current browser tab's `sessionStorage`. It is never transmitted to any third-party server, database, or stored in the repository.
+- **Stored in sessionStorage Only**: Your API key exists only in your current browser tab's `sessionStorage`. It is never transmitted to any third-party server, database, or stored in the repository. The key lives only in that tab and must be re-entered in a new tab or session.
 - **Client-Side Redactor (`src/core/redactor.ts`)**: Before any text leaves your machine, a deterministic regex redactor scrubs:
   - Passwords, access tokens, API keys, and secrets (`password is ...`, `token: ...`, `api_key = ...`)
   - Google API keys (`AIza...`)
@@ -44,6 +45,14 @@ Users can optionally provide their own Google Gemini API key to generate a polis
 - **Curated Payload**: Banter, system messages, media placeholders, and low-score clusters are excluded. Only messages with a triage score &ge; 25 are sent (maximum 40 lines, capped at 6,000 characters).
 - **Explicit Preview & Consent**: Clicking "Polish with Gemini" presents an inspection modal showing the exact redacted text. Nothing is transmitted until you explicitly click **Send**.
 - **Transparent Network Log**: When Gemini synthesis is used, the privacy badge transitions to amber (`Sanitized Cloud Synthesis · N lines sent`) and logs the request in an auditable network modal.
+
+### Gemini Setup (Step-by-Step)
+1. Create a free API key at [aistudio.google.com](https://aistudio.google.com).
+2. Open the **Gemini API Key (Optional Polish)** button in the header bar.
+3. Paste your key into the masked password field and click **Save Key**.
+4. Navigate to your briefing, and click **Polish with Gemini** on the Executive Summary card.
+5. Review the preview panel displaying the exact redacted lines, and click **Send**.
+6. *Note*: The key lives only in that browser tab (`sessionStorage`) and must be re-entered in a new tab or session.
 
 ### Redaction Limitations & Important Notes
 - **Best-Effort Regex**: The client-side redactor is regex-based. While it scrubs common credential formats, keys, tokens, contact details, and OTPs, **it does not remove personal names or unstructured free-text contextual details**.

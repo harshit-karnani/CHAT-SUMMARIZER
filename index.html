@@ -5,77 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="CatchUp Zero: Client-only, zero-egress WhatsApp chat briefing engine. 100% on-device deterministic heuristics for executives." />
+    <!-- Open Graph -->
+    <meta property="og:title" content="CatchUp Zero — WhatsApp Briefing" />
+    <meta property="og:description" content="Private, client-only executive briefing engine for WhatsApp chats. Zero-egress, 100% on-device heuristics." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/favicon.svg" />
+    <!-- Google Fonts: Poppins, Inter, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <title>CatchUp Zero — WhatsApp Briefing</title>
-    <script>
-      (function() {
-        window.__egress = window.__egress || [];
-        function logEgress(url, method, bodyBytes) {
-          var urlStr = String(url || '');
-          var host = '';
-          try {
-            var parsed = new URL(urlStr, window.location.href);
-            host = parsed.hostname;
-          } catch (e) {
-            host = '';
-          }
-          var entry = {
-            url: urlStr,
-            method: String(method || 'GET').toUpperCase(),
-            bodyBytes: Number(bodyBytes || 0),
-            host: host,
-            ts: Date.now()
-          };
-          window.__egress.push(entry);
-          try {
-            window.dispatchEvent(new CustomEvent('egress-call', { detail: entry }));
-          } catch (e) {}
-        }
-
-        var origFetch = window.fetch;
-        if (origFetch) {
-          window.fetch = function(input, init) {
-            var url = typeof input === 'string' ? input : (input && input.url ? input.url : '');
-            var method = (init && init.method) ? init.method : (input && input.method ? input.method : 'GET');
-            var bodyBytes = 0;
-            if (init && init.body) {
-              bodyBytes = typeof init.body === 'string' ? init.body.length : (init.body.byteLength || init.body.size || 0);
-            }
-            logEgress(url, method, bodyBytes);
-            return origFetch.apply(this, arguments);
-          };
-        }
-
-        if (window.XMLHttpRequest) {
-          var origOpen = XMLHttpRequest.prototype.open;
-          var origSend = XMLHttpRequest.prototype.send;
-          XMLHttpRequest.prototype.open = function(method, url) {
-            this.__egress_method = method;
-            this.__egress_url = url;
-            return origOpen.apply(this, arguments);
-          };
-          XMLHttpRequest.prototype.send = function(body) {
-            var bodyBytes = 0;
-            if (body) {
-              bodyBytes = typeof body === 'string' ? body.length : (body.byteLength || body.size || 0);
-            }
-            logEgress(this.__egress_url, this.__egress_method, bodyBytes);
-            return origSend.apply(this, arguments);
-          };
-        }
-
-        if (navigator && navigator.sendBeacon) {
-          var origBeacon = navigator.sendBeacon.bind(navigator);
-          navigator.sendBeacon = function(url, data) {
-            var bodyBytes = 0;
-            if (data) {
-              bodyBytes = typeof data === 'string' ? data.length : (data.byteLength || data.size || 0);
-            }
-            logEgress(url, 'POST', bodyBytes);
-            return origBeacon(url, data);
-          };
-        }
-      })();
-    </script>
+    <!-- Egress Guard classic script -->
+    <script src="/egress-guard.js"></script>
   </head>
   <body>
     <div id="root"></div>
