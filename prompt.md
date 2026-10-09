@@ -1,14 +1,14 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Full Chunk 1 core engines + Chunk 2 (Steps 1 to 7: Zero-egress trap, Ingestion/setup, Briefing view, Gap Strip minimap, Context lineage drawer, Accessibility pass, Polish & documentation).
+- **What is built**: Hybrid Privacy-Gated Pipeline. Engine 1 deterministic core (parser, relative dates, triage heuristics, clustering, Gap Strip minimap, context drawer, RFC 5545 .ics export) is 100% active and rock-solid. Group 1 (WebLLM removed, clean CSP), Group 2 (pure regex redactor & cloud payload builder with 10 unit tests), Group 3 (gemini-2.5-flash synthesis client with 6 mocked tests), Group 4 (sessionStorage KeyControl modal, Executive Summary card with preview panel, and 3-state Privacy Badge: LOCAL / CLOUD / ALERT).
 - **What works**:
-  - Full end-to-end executive UI with zero-egress badge, dropzone, staged progress, Gap Strip density minimap, briefing cards, and verbatim context drawer.
-  - Page title, custom warm-orange SVG favicon, meta description, and comprehensive documentation in README.md.
-  - Strict CSP `connect-src 'none'` headers in vercel.json.
-  - `npm run build`, `npm run smoke`, and `npm test` all passing cleanly.
+  - Pure deterministic on-device operation with zero data sent by default.
+  - Optional user-keyed Gemini polish: user pastes key in sessionStorage, reviews redacted candidate lines in preview panel before sending, and receives crisp 2-sentence synthesis.
+  - Privacy badge dynamically reflects state: green LOCAL (0 data sent), amber CLOUD (credentials redacted locally, N lines sent), red ALERT (unauthorized outbound calls).
+  - All 19 unit tests pass, smoke test passes, build succeeds in ~1s with 0 mentions of AIza in `dist/`.
 - **What is broken**: Nothing broken.
-- **Next step**: CHECKPOINT verification, deployment, and live status reporting.
+- **Next step**: Final checks and verification reporting.
 
 ---
 
@@ -140,15 +140,24 @@
 - **Key Decisions**: Replaced default Vite purple favicon with branded warm-orange gradient SVG lightning bolt on dark backdrop, meeting brand aesthetic. Structured README covering full architecture, testing, zero-egress posture, and offline capability.
 - **Issues Resolved**: None.
 
+### Step 19: Architecture Pivot: WebLLM Removed, Redactor + Opt-in Gemini Added [2026-10-09T15:10:00+05:30]
+- **Prompt/Instruction Summary**: Pivot to hybrid privacy-gated architecture. Drop WebLLM/WebGPU entirely due to large model download sizes (multi-GB), high client memory consumption, and erratic WebGPU driver support across devices. Introduce client-side deterministic redactor (`src/core/redactor.ts`), selective cloud payload builder (`src/core/payload.ts`), user-keyed Gemini synthesis layer (`src/core/gemini.ts`), key modal (`src/ui/KeyControl.tsx`), executive summary review panel (`src/ui/ExecutiveSummary.tsx`), and 3-state privacy badge (`src/ui/EgressBadge.tsx`).
+- **Files Modified**: `vercel.json`, `index.html`, `public/egress-guard.js`, `src/core/redactor.ts`, `src/core/payload.ts`, `src/core/gemini.ts`, `src/hooks/useEgress.ts`, `src/ui/KeyControl.tsx`, `src/ui/EgressBadge.tsx`, `src/ui/ExecutiveSummary.tsx`, `src/ui/BriefingView.tsx`, `src/App.tsx`, `tests/redactor.test.ts`, `tests/gemini.test.ts`, `README.md`, `prompt.md`.
+- **Key Decisions**:
+  - Reasons for pivot: heavy model bundle sizes, client device memory constraints, and WebGPU platform incompatibility.
+  - Privacy-gated architecture: raw messages never reach the network. Only high-signal candidates (triage score >= 25) are pre-filtered, redacted on-device for credentials/PII, and previewed by the user before dispatch.
+  - Zero key bundling: keys are read strictly from tab `sessionStorage` at call time and never logged or included in bundle (`grep dist/ for "AIza"` returns empty).
+- **Issues Resolved**: Resolved TypeScript property checks in payload builder and avoided string bundling of literal key prefixes.
+
 ---
 
 ## Gen AI Usage
-Engine 1 uses no generative AI. Pure heuristics.
+Engine 1 uses no generative AI. Optional: when the user supplies their own Gemini 2.5 Flash API key and clicks Send, up to 40 redacted high-signal lines are sent to Google Gemini from the browser to produce a 2-sentence executive summary (src/core/gemini.ts, src/core/redactor.ts). Without a key, or on any failure, the deterministic summary is used. No key is stored in the repo or bundle.
 
 ---
 
 ## Architecture Principles
-- **Zero-egress**: Nothing leaves the device, enforced by CSP `connect-src 'none'` plus a visible network trap.
-- **Deterministic-first**: Engine 1 is rule-based and instant; any AI is optional and secondary.
-- **Client-only**: Static SPA, no backend.
-- **Grounded**: Every briefing item cites real message ids.
+- **Deterministic-first**: Engine 1 always works, zero-fail; any AI is optional and secondary.
+- **Client-only**: Static SPA, no backend servers, databases, or API routes.
+- **Privacy-gated**: Redact on-device, only score >= 25 lines sent, user-supplied key in sessionStorage, explicit Send click required, visible network badge and log.
+- **Grounded**: sourceMessageIds from code only, zero hallucinations.
