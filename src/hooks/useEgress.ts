@@ -11,6 +11,7 @@ export interface EgressCall {
 declare global {
   interface Window {
     __egress?: EgressCall[];
+    __egressSubscribe?: (fn: (entry: EgressCall) => void) => () => void;
   }
 }
 
@@ -30,6 +31,15 @@ export function useEgress(): {
 
   useEffect(() => {
     setIsAirplaneReady(true);
+
+    if (typeof window !== 'undefined' && typeof window.__egressSubscribe === 'function') {
+      const unsub = window.__egressSubscribe(() => {
+        if (window.__egress) {
+          setCalls([...window.__egress]);
+        }
+      });
+      return unsub;
+    }
 
     const handleEgressCall = () => {
       if (typeof window !== 'undefined' && window.__egress) {

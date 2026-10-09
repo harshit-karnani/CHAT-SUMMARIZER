@@ -65,4 +65,16 @@
       return origBeacon(url, data);
     };
   }
+
+  window.__egressSubscribe = function(fn) {
+    var handler = function(e) {
+      if (typeof fn === 'function') {
+        fn(e.detail);
+      }
+    };
+    window.addEventListener('egress-call', handler);
+    return function() {
+      window.removeEventListener('egress-call', handler);
+    };
+  };
 })();

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Sparkles, Loader2, ChevronRight, Eye } from 'lucide-react';
 import type { Briefing, ParsedChat, UserContext } from '../types';
 import { buildCloudPayload, type CloudPayload } from '../core/payload';
@@ -93,25 +94,32 @@ export function ExecutiveSummary({
   };
 
   return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3.5">
+    <div className="p-4 sm:p-5 rounded-xl bg-amber-50/40 border border-amber-200/60 space-y-3.5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] uppercase tracking-wider font-bold text-zinc-500">
+          <span className="font-display font-bold text-zinc-900 text-sm tracking-tight">
             Executive Summary
           </span>
-          {geminiStatus === 'success' && geminiSummary && (
+          {geminiStatus === 'success' && geminiSummary ? (
             <span className="badge badge-accent text-[11px]">
               <Sparkles className="w-3 h-3 text-orange-700" />
               Gemini, from redacted text
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border border-amber-300 text-amber-900 font-mono shadow-2xs">
+              Deterministic Heuristics Active
             </span>
           )}
         </div>
 
         {/* Action Controls */}
         {!apiKey ? (
-          <span className="text-xs text-zinc-400">
+          <Link
+            to="/help#gemini-setup"
+            className="text-xs text-zinc-400 hover:text-orange-600 transition-colors underline decoration-dotted"
+          >
             Add a Gemini key for a sharper summary (optional).
-          </span>
+          </Link>
         ) : geminiStatus !== 'success' && !isPreviewOpen && !isSynthesizing ? (
           <button
             type="button"
