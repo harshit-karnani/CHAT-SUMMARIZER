@@ -39,15 +39,15 @@ body {
   min-height: 44px;
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 600; /* font-semibold */
   line-height: 1.25rem;
-  color: #ffffff;
+  color: #09090b; /* text-zinc-950 for >= 4.5:1 contrast */
   background-image: linear-gradient(135deg, var(--color-accent-from), var(--color-accent-to));
   border-radius: 0.75rem;
   box-shadow: 0 4px 14px 0 rgba(249, 115, 22, 0.28);
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   outline: none;
 }
 
@@ -112,7 +112,7 @@ body {
 
 .badge-accent {
   background-color: #fff7ed; /* orange-50 */
-  color: #c2410c;            /* orange-700 */
+  color: #9a3412;            /* orange-800 (> 6.3:1 contrast) */
   border: 1px solid #ffedd5; /* orange-200 */
 }
 

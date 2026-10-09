@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "smoke": "vite-node scripts/smoke.ts"
+    "smoke": "vite-node scripts/smoke.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
@@ -29,6 +30,7 @@
     "tsx": "^4.23.15",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
-    "vite-node": "^6.0.0"
+    "vite-node": "^6.0.0",
+    "vitest": "^5.0.3"
   }
 }

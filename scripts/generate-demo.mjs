@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Simple pseudo-random seeded generator (LCG)
+// Deterministic seeded generator
 let seed = 4202026;
 function random() {
   seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -35,7 +35,7 @@ const casualLines = [
   "gm team! ready for day two?",
   "coffee acquired ☕ let's crush this sprint",
   "wait did someone push without running lint?",
-  "lol my bad fixing that typo",
+  "lol my bad fixing that typo now",
   "haha classic",
   "looks super clean",
   "yeah agree with that approach",
@@ -71,213 +71,229 @@ const casualLines = [
   "gotta love hackathon deadlines haha",
 ];
 
-// Start timestamp: 12 Oct 2026, 09:00 IST
-let currentDate = new Date('2026-10-12T09:00:00+05:30');
+// Spanning Tue 6 Oct 2026 to Thu 8 Oct 2026
+// Start: 2026-10-06 09:00 IST
+let currentDate = new Date('2026-10-06T09:00:00+05:30');
 
-const messages = [];
+const allMessages = [];
+let nonSystemCount = 0;
 
-// Message 1 is an initial greeting
-messages.push({
+// Helper to advance time realistically across 3 days
+function advanceTime() {
+  const r = random();
+  if (r < 0.75) {
+    currentDate = new Date(currentDate.getTime() + randInt(1, 3) * 60 * 1000);
+  } else if (r < 0.95) {
+    currentDate = new Date(currentDate.getTime() + randInt(5, 12) * 60 * 1000);
+  } else {
+    currentDate = new Date(currentDate.getTime() + randInt(35, 75) * 60 * 1000);
+  }
+}
+
+// Initial greeting (non-system #1)
+allMessages.push({
   date: new Date(currentDate),
   sender: 'Riya',
   text: 'Hey team! Welcome to the Hackathon Team chat 🚀',
   isSystem: false,
 });
+nonSystemCount++;
 
-// Plant the join line early (at index 5)
-for (let i = 1; i < 420; i++) {
-  // Burst timing: sometimes 1-3 mins, sometimes 15-45 mins between bursts, overnight jumps
-  const r = random();
-  if (r < 0.7) {
-    currentDate = new Date(currentDate.getTime() + randInt(1, 4) * 60 * 1000);
-  } else if (r < 0.93) {
-    currentDate = new Date(currentDate.getTime() + randInt(12, 45) * 60 * 1000);
-  } else {
-    currentDate = new Date(currentDate.getTime() + randInt(2, 6) * 60 * 60 * 1000);
-  }
+while (nonSystemCount < 420) {
+  advanceTime();
 
-  // Exact system join line at message index 5
-  if (i === 5) {
-    messages.push({
+  // 1 System join line at non-system count 5
+  if (nonSystemCount === 5 && !allMessages.some(m => m.text.includes("joined using this group's invite link"))) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'system',
       text: "Dev joined using this group's invite link",
       isSystem: true,
     });
-    continue;
+    advanceTime();
   }
 
-  // Media omitted at specific indices
-  if (i === 28 || i === 114 || i === 230 || i === 340) {
-    const sender = senders[randInt(0, senders.length - 1)];
-    messages.push({
+  // Media placeholders (extra system lines)
+  if (
+    (nonSystemCount === 30 || nonSystemCount === 120 || nonSystemCount === 240 || nonSystemCount === 350) &&
+    allMessages[allMessages.length - 1]?.text !== '<Media omitted>'
+  ) {
+    const s = senders[randInt(0, senders.length - 1)];
+    allMessages.push({
       date: new Date(currentDate),
-      sender,
+      sender: s,
       text: '<Media omitted>',
       isSystem: true,
     });
-    continue;
+    advanceTime();
   }
 
   // Multi-line message
-  if (i === 45) {
-    messages.push({
+  if (nonSystemCount === 50) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Meera',
-      text: "Quick summary of today's goals:\n1. Finalize heuristics engine\n2. Integrate ICS export\n3. Build crisp UI components",
+      text: "Quick summary of sprint targets:\n1. Zero egress heuristic core\n2. Clean executive UI tokens\n3. RFC 5545 calendar export",
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  // In the final ~40% (indices 252 to 419), plant asks, deadlines, decisions, open questions
+  // In final ~40% (nonSystemCount >= 252, happening on Thu 8 Oct 2026):
   // 1. Direct asks to Kabir (indices 260, 285, 335, 395)
-  if (i === 260) {
-    messages.push({
+  if (nonSystemCount === 260) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Riya',
       text: 'Kabir can you review the auth PR before we merge to main?',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 285) {
-    messages.push({
+  if (nonSystemCount === 285) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Meera',
       text: 'kabi please share the API key for the database',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 335) {
-    messages.push({
+  if (nonSystemCount === 335) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Dev',
       text: 'Could you check the deploy logs Kabir? Need to verify zero-egress CSP headers',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 395) {
-    messages.push({
+  if (nonSystemCount === 395) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Riya',
-      text: 'Kabir can you send the updated pitch deck?',
+      text: 'Kabir can you send the updated pitch deck for the judges?',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  // 2. Deadlines (indices 275, 320, 380)
-  if (i === 275) {
-    messages.push({
+  // 2. Deadlines on Thu 8 Oct 2026:
+  // - "by 5 PM tomorrow" -> Fri 9 Oct 17:00
+  // - "Friday EOD" -> Fri 9 Oct 18:00
+  // - "on 14th" -> 14 Oct 2026
+  if (nonSystemCount === 275) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Aarav',
       text: 'Team reminder: we must submit the slide deck by 5 PM tomorrow',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 320) {
-    messages.push({
+  if (nonSystemCount === 320) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Dev',
-      text: 'QA announcement: all feature branches must be merged Friday EOD',
+      text: 'Dev reminder: all feature branches must be merged Friday EOD',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 380) {
-    messages.push({
+  if (nonSystemCount === 380) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Meera',
-      text: 'Hackathon organizers posted that booth registration closes on 14th',
+      text: 'Organizers said the demo booth signup closes on 14th',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 360) {
-    messages.push({
-      date: new Date(currentDate),
-      sender: 'Dev',
-      text: 'submission deadline: we have to turn in our code tonight by 11 PM',
-      isSystem: false,
-    });
-    continue;
-  }
-
-  // 3. Decisions (indices 295, 345, 405) - must not be sent by Kabir (user.me) and must have decision keywords
-  if (i === 295) {
-    messages.push({
+  // 3. Decisions (indices 295, 345, 405) - sent by non-Kabir
+  if (nonSystemCount === 295) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Dev',
       text: "let's go with Postgres for our database, confirmed by everyone",
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 345) {
-    messages.push({
+  if (nonSystemCount === 345) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Riya',
       text: 'we decided on the presentation deck structure, finalised and locked',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 405) {
-    messages.push({
+  if (nonSystemCount === 405) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Meera',
       text: "confirmed: Tailwind v4 is approved and locked for styling all cards",
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
   // 4. Open group questions (indices 305, 365)
-  if (i === 305) {
-    messages.push({
+  if (nonSystemCount === 305) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Aarav',
       text: 'can someone test the sign-up flow on mobile?',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  if (i === 365) {
-    messages.push({
+  if (nonSystemCount === 365) {
+    allMessages.push({
       date: new Date(currentDate),
       sender: 'Meera',
       text: 'does anyone know where the shared Figma link was pinned?',
       isSystem: false,
     });
+    nonSystemCount++;
     continue;
   }
 
-  // General chatter
+  // General casual chatter
   const sender = senders[randInt(0, senders.length - 1)];
   const line = casualLines[randInt(0, casualLines.length - 1)];
-  messages.push({
+  allMessages.push({
     date: new Date(currentDate),
     sender,
     text: line,
     isSystem: false,
   });
+  nonSystemCount++;
 }
 
 // Convert to Android WhatsApp export format
-const outputLines = messages.map((m) => {
+const outputLines = allMessages.map((m) => {
   const tsStr = formatAndroidTimestamp(m.date);
   if (m.isSystem && m.sender === 'system') {
     return `${tsStr} - ${m.text}`;
@@ -291,4 +307,7 @@ const outPath = path.resolve(__dirname, '../src/data/demo_chat.txt');
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, content, 'utf-8');
 
-console.log(`Generated exactly ${messages.length} messages in ${outPath}`);
+const realCount = allMessages.filter(m => !m.isSystem).length;
+const totalCount = allMessages.length;
+console.log(`Generated demo chat: ${realCount} non-system messages (${totalCount} total lines)`);
+console.log(`Span: ${allMessages[0].date.toDateString()} to ${allMessages[allMessages.length - 1].date.toDateString()}`);

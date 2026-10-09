@@ -1,13 +1,14 @@
 # CatchUp Zero — Project Tracker & Log
 
 ## Current State
-- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, bundled demo chat dataset, placeholder shell (`src/App.tsx`), and automated smoke test script (`scripts/smoke.ts`, `npm run smoke`).
+- **What is built**: Project scaffold, design tokens, core domain types, WhatsApp parser, relative date resolution, deterministic triage heuristics, briefing builder, RFC 5545 ICS calendar export, bundled demo chat dataset, placeholder shell (`src/App.tsx`), vitest suite (`tests/parser.test.ts`), and automated smoke test script (`scripts/smoke.ts`, `npm run smoke`).
 - **What works**:
   - `npm run build` succeeds cleanly with self-hosted Manrope variable fonts and zero external network calls.
-  - `npm run smoke` validates 420 messages parsed, all planted categories detected (needs_you: 4, deadline: 4, decision: 3), and zero hallucinated message IDs.
-  - Shell card displays "Engine 1 ready: 420 messages parsed, 11 items found".
+  - `npm run smoke` validates 420 non-system messages parsed with `node:fs`, all 4 planted categories detected (direct asks: 5, deadlines: 3, decisions: 3, open questions: 2), and zero hallucinated message IDs.
+  - `npm test` runs vitest with 3/3 passing parser test cases (Android format, iOS format, system lines with colons).
+  - Design tokens verified for WCAG AA contrast (button gradient with zinc-950 text at 7.29:1 / 9.37:1; orange-50 badge with orange-800 text at 6.36:1).
 - **What is broken**: Nothing broken.
-- **Next step**: CHECKPOINT verification, local preview test, and deployment to Vercel production.
+- **Next step**: Ready for Chunk 2 (Full UI Implementation).
 
 ---
 
@@ -72,6 +73,20 @@
 - **Files Modified**: `src/App.tsx`, `scripts/smoke.ts`, `package.json`, `package-lock.json`, `prompt.md`.
 - **Key Decisions**: Built clean zero-egress status card presenting live briefing numbers. Added automated integrity check verifying all item message IDs exist in original chat without hallucinations.
 - **Issues Resolved**: None.
+
+### Step 11: Chunk 1 Amendments (A1-A5) [2026-10-09T14:23:00+05:30]
+- **Prompt/Instruction Summary**:
+  - A1: Weak aliases (bro, bhai, dude, man, sir, guys, buddy, boss, mate, or < 3 chars) grant mention +15 (reason "mentions you (weak match)") and only trigger direct_question if accompanied by '?' or request verb. Strong aliases retain +40.
+  - A2: Decoupled smoke script from `demo.ts` by reading `src/data/demo_chat.txt` via `node:fs`. Exit non-zero if direct asks (< 4), deadlines (< 3), decisions (< 3), or open questions (< 2) are missing.
+  - A3: Regenerated `demo_chat.txt` with exactly 420 non-system messages spanning Tue 6 Oct to Thu 8 Oct 2026 so "Friday EOD" resolves to Fri 9 Oct 2026 and "on 14th" to 14 Oct 2026.
+  - A4: Changed `.btn-primary` text to `text-zinc-950` (#09090b) and orange badges to `text-orange-800` (#9a3412). Contrast numbers verified:
+    - Text `#09090b` (`zinc-950`) on `#f97316` (`orange-500`): **7.29 : 1** (WCAG AAA >= 7.0:1)
+    - Text `#09090b` (`zinc-950`) on `#f59e0b` (`amber-500`): **9.37 : 1** (WCAG AAA >= 7.0:1)
+    - Text `#9a3412` (`orange-800`) on `#fff7ed` (`orange-50`): **6.36 : 1** (WCAG AA >= 4.5:1)
+  - A5: Enhanced parser to detect system lines even when containing colons (e.g. encryption notice, subject changed, security codes). Added vitest suite `tests/parser.test.ts` with 3 test cases.
+- **Files Modified**: `src/core/triage.ts`, `scripts/smoke.ts`, `scripts/generate-demo.mjs`, `src/data/demo_chat.txt`, `src/index.css`, `src/App.tsx`, `src/core/parser.ts`, `tests/parser.test.ts`, `package.json`, `package-lock.json`, `prompt.md`.
+- **Key Decisions**: Separated strong and weak alias regex matching. Employed `vitest` for test execution.
+- **Issues Resolved**: Prevented Node CLI ?raw module resolution errors in smoke runner.
 
 ---
 

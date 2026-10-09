@@ -11,6 +11,9 @@ const IOS_REGEX =
 const MEDIA_PLACEHOLDERS =
   /^(<media omitted>|media omitted|<image omitted>|image omitted|<sticker omitted>|sticker omitted|<video omitted>|video omitted|<audio omitted>|audio omitted|<document omitted>|document omitted|this message was deleted|you deleted this message|null)$/i;
 
+const SYSTEM_PHRASES_REGEX =
+  /\b(?:added|removed|left|joined|changed|created group|security code changed|end-to-end encrypted)\b/i;
+
 interface HeaderMatch {
   dateStr: string;
   timeStr: string;
@@ -117,10 +120,18 @@ export function parseChat(rawText: string): ParsedChat {
       let text = headerMatch.remainder.trim();
       let isSystem = true;
 
-      if (colonIdx !== -1) {
-        sender = headerMatch.remainder.slice(0, colonIdx).trim();
+      const potentialSender = colonIdx !== -1 ? headerMatch.remainder.slice(0, colonIdx).trim() : '';
+      const isSystemByPhrase = colonIdx !== -1 && SYSTEM_PHRASES_REGEX.test(potentialSender);
+
+      if (colonIdx !== -1 && !isSystemByPhrase) {
+        sender = potentialSender;
         text = headerMatch.remainder.slice(colonIdx + 2).trim();
         isSystem = MEDIA_PLACEHOLDERS.test(text);
+      } else {
+        // No "Name: " separator or matched common system phrase
+        isSystem = true;
+        sender = 'system';
+        text = headerMatch.remainder.trim();
       }
 
       if (!isSystem && sender) {
@@ -130,7 +141,7 @@ export function parseChat(rawText: string): ParsedChat {
       messages.push({
         id: messages.length + 1,
         ts,
-        sender: isSystem && colonIdx === -1 ? 'system' : sender,
+        sender: isSystem ? 'system' : sender,
         text,
         isSystem,
         raw: rawLine,

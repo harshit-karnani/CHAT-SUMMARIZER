@@ -20,18 +20,44 @@ const URGENT_REGEX = /\b(?:asap|urgent|immediately|right now|tonight|eod|last da
 const DECISION_REGEX =
   /\b(?:let's go with|we decided|final|finalised|finalized|confirmed|locked|agreed|approved|going ahead with|it's settled)\b/i;
 
+const WEAK_ALIASES_SET = new Set([
+  'bro',
+  'bhai',
+  'dude',
+  'man',
+  'sir',
+  'guys',
+  'buddy',
+  'boss',
+  'mate',
+]);
+
 export function triage(messages: Message[], user: UserContext): TriageResult[] {
   const allAliases = Array.from(new Set([user.me, ...(user.aliases || [])]))
     .map((a) => a.trim())
     .filter(Boolean);
 
-  const aliasRegexes = allAliases.map(
+  const strongAliases: string[] = [];
+  const weakAliases: string[] = [];
+
+  for (const alias of allAliases) {
+    const lower = alias.toLowerCase();
+    if (alias.length < 3 || WEAK_ALIASES_SET.has(lower)) {
+      weakAliases.push(alias);
+    } else {
+      strongAliases.push(alias);
+    }
+  }
+
+  const strongRegexes = strongAliases.map(
+    (alias) => new RegExp(`(?:^|\\W)@?${escapeRegex(alias)}(?:\\W|$)`, 'i')
+  );
+  const weakRegexes = weakAliases.map(
     (alias) => new RegExp(`(?:^|\\W)@?${escapeRegex(alias)}(?:\\W|$)`, 'i')
   );
 
-  const hasAliasMention = (text: string): boolean => {
-    return aliasRegexes.some((regex) => regex.test(text));
-  };
+  const checkStrongMention = (text: string) => strongRegexes.some((re) => re.test(text));
+  const checkWeakMention = (text: string) => weakRegexes.some((re) => re.test(text));
 
   const results: TriageResult[] = [];
 
@@ -56,12 +82,18 @@ export function triage(messages: Message[], user: UserContext): TriageResult[] {
     let score = 0;
     let dueAt: number | undefined;
 
-    // 1. Mention (+40)
-    const mentioned = hasAliasMention(text);
-    if (mentioned) {
+    // 1. Mention: Strong (+40) vs Weak (+15)
+    const hasStrongMention = checkStrongMention(text);
+    const hasWeakMention = !hasStrongMention && checkWeakMention(text);
+
+    if (hasStrongMention) {
       signals.push('mention');
       reasons.push('mentions you');
       score += 40;
+    } else if (hasWeakMention) {
+      signals.push('mention');
+      reasons.push('mentions you (weak match)');
+      score += 15;
     }
 
     // Check if directly follows user message within 10 min
@@ -75,9 +107,13 @@ export function triage(messages: Message[], user: UserContext): TriageResult[] {
     }
 
     // 2. Direct question (+25)
-    // contains "?" or starts with a request verb AND (mentions alias OR directly follows user message within 10m)
+    // contains "?" or starts with a request verb
+    // Triggers if: has strong mention, OR weak mention (only with ? or verb), OR directly follows user
     const hasQuestionOrRequest = text.includes('?') || REQUEST_VERBS_REGEX.test(text);
-    if (hasQuestionOrRequest && (mentioned || directlyFollowsUser)) {
+    const triggersDirect =
+      hasQuestionOrRequest && (hasStrongMention || hasWeakMention || directlyFollowsUser);
+
+    if (triggersDirect) {
       signals.push('direct_question');
       reasons.push('asked you directly');
       score += 25;
@@ -94,7 +130,6 @@ export function triage(messages: Message[], user: UserContext): TriageResult[] {
     // 4. Deadline (+25, +10 if within 48h)
     const deadlines = extractDeadlines(text, msg.ts);
     if (deadlines.length > 0) {
-      // Pick earliest deadline
       deadlines.sort((a, b) => a.dueAt - b.dueAt);
       const earliest = deadlines[0];
       dueAt = earliest.dueAt;

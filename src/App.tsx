@@ -16,15 +16,15 @@ export default function App() {
     }
   }, []);
 
-  const messageCount = parsed?.messages.length ?? 0;
+  const messageCount = parsed?.messages.filter((m) => !m.isSystem).length ?? 0;
   const itemCount = briefing?.items.length ?? 0;
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 flex flex-col items-center justify-center p-6 antialiased">
       {/* Header */}
       <header className="mb-8 text-center max-w-lg">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold mb-3">
-          <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-800 text-xs font-semibold mb-3">
+          <ShieldCheck className="w-3.5 h-3.5 text-orange-800" />
           <span>Zero-Egress · Client-Only Intelligence</span>
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
